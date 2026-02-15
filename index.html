@@ -1,157 +1,303 @@
-diff --git a/index.html b/index.html
-index af46e9bc8e1ecba779ecda945b1629261ca3f87b..9456cefbffe18f4c4a9d6ee2597b1e67a08075e5 100644
---- a/index.html
-+++ b/index.html
-@@ -173,131 +173,137 @@
- 
-   <header>
-     <h1>👋 Hi, I'm Anass Hamdy</h1>
-     <p>Economics Graduate | Business & Analytics Focus</p>
-   </header>
- 
-   <div class="container">
- 
-     <section id="about">
-       <h2>About Me</h2>
-       <p class="tagline"><strong>I turn data into business opportunities.</strong></p>
-       <p>Economics and Management graduate with advanced technical proficiency in Data Analytics and Machine Learning (Python, R, SQL). Passionate about bridging the gap between quantitative analysis and strategic business management to drive digital innovation and optimize decision-making. Proven ability to translate complex data into actionable business insights through independent projects.</p>
-       <p><strong>What drives me:</strong> I believe the best entrepreneurs today aren't just creative thinkers—they're people who can extract insights from data and turn them into actionable strategies. That's why I've invested heavily in building my technical toolkit through certifications from IBM, Stanford, and Google.</p>
-       <p><strong>Currently:</strong> Eager to apply a unique combination of economic theory and technical expertise to solve real-world challenges in a rigorous Master's program.</p>
-       <p><strong>Languages:</strong> English, French, Arabic, German</p>
-     </section>
- 
-     <section id="skills">
-   <h2>🛠️ Skills & Tools</h2>
- 
-   <!-- Data Science & Machine Learning -->
-   <div class="skill-category">
-     <h3>Data Science & ML</h3>
-     <div class="skills">
-       <span class="skill-tag">Python (Pandas, Scikit-learn, Keras, TensorFlow)</span>
--      <span class="skill-tag">R, R Studio, R Markdown</span>
-+      <span class="skill-tag">R, RStudio, R Markdown</span>
-       <span class="skill-tag">Machine Learning</span>
-     </div>
-   </div>
- 
-   <!-- Data Management & BI -->
-   <div class="skill-category">
-     <h3>Business Intelligence & Workflow</h3>
-     <div class="skills">
-       <span class="skill-tag">SQL</span>
-       <span class="skill-tag">Excel / Google Sheets</span>
-       <span class="skill-tag">Microsoft Power BI</span>
-       <span class="skill-tag">IBM Cognos</span>
-       <span class="skill-tag">Git & GitHub</span>
-       <span class="skill-tag">Jupyter Notebooks</span>
-     </div>
-   </div>
- 
-   <!-- Project & Version Control -->
-   <div class="skill-category">
-     <h3>Quantitative Methods & Econometrics</h3>
-     <div class="skills">
-       <span class="skill-tag">Modeling & Analysis</span>
-       <span class="skill-tag">Regression Modeling</span>
-       <span class="skill-tag">Time-Series Analysis (ARIMA)</span>
-       <span class="skill-tag">Optimization (Linear Programming)</span>
--      <span class="skill-tag">Hypothesis Testing,Statistical Inference</span>
-+      <span class="skill-tag">Hypothesis Testing, Statistical Inference</span>
-     </div>
-   </div>
- </section>
- 
-     <section id="projects">
-       <h2>📂 Featured Projects</h2>
-       <div class="project-card">
-         <h3>Customer Segmentation & Marketing Insights</h3>
-         <p>Used R and K-Means clustering to segment 2,240 customers into 4 distinct groups based on spending, income, and engagement. Visualized clusters with PCA and feature plots to inform targeted marketing strategies.</p>
--        <a href="projects/customer_segmentation/customer_segmentation_Report.pdf" target="_blank">📄 View Report</a>
-+        <a href="projects/customer_segmentation/customer_segmentation_Report.pdf" target="_blank" rel="noopener noreferrer">📄 View Report</a>
-       </div>
-       <div class="project-card">
--        <h3>Prediction & Forecasting the stock market price of Microsoft with LSTM</h3>
-+        <h3>Forecasting Microsoft's Stock Price with LSTM</h3>
-         <p>This analysis aims to forecast Microsoft's stock price using deep learning methods. A robust forecasting model will be developed using historical stock market data from March 13, 1986, to December 29, 2023, to support predictions of Microsoft's stock prices.</p>
--        <a href="projects/msft_analysis/MSFT.html" target="_blank">📈 Interactive Report</a>
-+        <a href="projects/msft_analysis/MSFT.html" target="_blank" rel="noopener noreferrer">📈 Interactive Report</a>
-       </div>
-       <div class="project-card">
-         <h3>Car Sales Strategy: Value Retention & Market Entry</h3>
-         <p>Used Excel to analyze resale value dynamics across 15+ car brands. Identified BMW as top performer (72% 1-yr retention) and quantified depreciation risk for fleet/leasing models. Proposed niche vs. volume-based go-to-market strategies for startups.</p>
--        <a href="projects/car_sales_analysis/Car_sales_analysis.pdf" target="_blank">📄 Executive Report</a> |
--        <a href="projects/car_sales_analysis/Car_sales_analysis.xlsx" target="_blank">📊 Full Analysis (Excel)</a> |
--        <a href="projects/car_sales_analysis/Car_sales_row_data.csv" target="_blank">🗃️ Raw Data (CSV)</a>
-+        <a href="projects/car_sales_analysis/Car_sales_analysis.pdf" target="_blank" rel="noopener noreferrer">📄 Executive Report</a> |
-+        <a href="projects/car_sales_analysis/Car_sales_analysis.xlsx" target="_blank" rel="noopener noreferrer">📊 Full Analysis (Excel)</a> |
-+        <a href="projects/car_sales_analysis/Car_sales_row_data.csv" target="_blank" rel="noopener noreferrer">🗃️ Raw Data (CSV)</a>
-+      </div>
-+      <div class="project-card">
-+        <h3>Retail Sales & Customer Insights with SQL</h3>
-+        <p>Designed a relational retail dataset and wrote end-to-end SQL analytics to track monthly revenue, average order value, product/category performance, and customer lifetime value. Demonstrates practical SQL for business intelligence and strategic decision-making.</p>
-+        <a href="projects/sql_project/README.md" target="_blank" rel="noopener noreferrer">📘 Project Overview</a> |
-+        <a href="projects/sql_project/retail_sales_analysis.sql" target="_blank" rel="noopener noreferrer">🧠 SQL Script</a>
-       </div>
-     </section>
- 
-     <section id="certifications">
-       <h2>📜 Certifications</h2>
-       <ul class="cert-list">
-         <li>
-           <img src="https://img.shields.io/badge/IBM-0066CC?logo=ibm&logoColor=white" alt="IBM" style="height:1.2em; margin-right:6px; vertical-align:middle;">
-           <strong>Specialized Models: Time Series and Survival Analysis</strong><br>
-           Completed: Jan 2024<br>
--          <p><strong>Skills:</strong>: Time Series Analysis and Forecasting, Unsupervised Learning, Python, Data Cleansing, Applied Machine Learning, Deep Learning, Jupyter, Data Transformation<br>
--          <a href="https://coursera.org/share/6fea878aa68d01c1281c6edd56cef52c" target="_blank">View Credential (ID: 6FEA878AA68D01C1281C6EDD56CEF52C)</a><br>
-+          <p><strong>Skills:</strong> Time Series Analysis and Forecasting, Unsupervised Learning, Python, Data Cleansing, Applied Machine Learning, Deep Learning, Jupyter, Data Transformation.</p>
-+          <a href="https://coursera.org/share/6fea878aa68d01c1281c6edd56cef52c" target="_blank" rel="noopener noreferrer">View Credential (ID: 6FEA878AA68D01C1281C6EDD56CEF52C)</a><br>
-           <em>This specialization equipped me with advanced modeling techniques I applied in my MSFT stock forecasting project.</em>
-         </li>
-         <li>
-           <img src="https://img.shields.io/badge/Stanford-4285F4?logo=stanford&logoColor=white" alt="Stanford" style="height:1.2em; margin-right:6px;">
-           <strong>Supervised Machine Learning: Regression and Classification</strong><br>
-           Completed: Feb 2024<br>
-           <p><strong>Skills:</strong> Build machine learning models in Python using popular libraries NumPy & scikit-learn.<br>
-             Build & train supervised machine learning models for prediction & binary classification tasks, including linear regression & logistic regression.</p>
--          <a href="https://www.coursera.org/account/accomplishments/verify/SPZ6Q4FMWSK3" target="_blank">View Credential (ID: SPZ6Q4FMWSK3)</a><br>
-+          <a href="https://www.coursera.org/account/accomplishments/verify/SPZ6Q4FMWSK3" target="_blank" rel="noopener noreferrer">View Credential (ID: SPZ6Q4FMWSK3)</a><br>
-           <em>Applied these skills in projects like Customer Segmentation (K-Means in R) and MSFT Stock Forecasting (LSTM in Python).</em>
-         </li>
-         <li>
-           <img src="https://img.shields.io/badge/Stanford-4285F4?logo=stanford&logoColor=white" alt="Stanford" style="height:1.2em; margin-right:6px;">
-           <strong>Advanced Learning Algorithms</strong><br>
-           Completed: Sep 2024<br>
-           <p><strong>Skills:</strong> Build and train a neural network with TensorFlow to perform multi-class classification.<br>
-             Build and use decision trees and tree ensemble methods, including random forests and boosted trees.</p>
--          <a href="https://coursera.org/share/4c1da26176b7e40f3df6aa845d9d8bc0" target="_blank">View Credential (ID: WNHQZ6PYOTUW)</a><br>
-+          <a href="https://coursera.org/share/4c1da26176b7e40f3df6aa845d9d8bc0" target="_blank" rel="noopener noreferrer">View Credential (ID: WNHQZ6PYOTUW)</a><br>
-           <em>Applied these concepts in my MSFT stock forecasting project (LSTM) and Customer Segmentation (tree-based feature engineering).</em>
-         </li>
-       </ul>
-     </section>
- 
-     <section id="contact">
-       <h2>📧 Contact & Resources</h2>
-       <p>Feel free to reach out or explore more:</p>
-       <ul>
-         <li>📧 Email me: <a href="mailto:anass.hamdy98@gmail.com">anass.hamdy98@gmail.com</a></li>
--        <li><a href="https://www.linkedin.com/in/anass-hamdy-8b7a4a220/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3B76pmRKDxRZOIr5yAALXkRg%3D%3D" target="_blank">💼 LinkedIn Profile</a></li>
--        <li><a href="https://www.credly.com/users/anass-hamdy" target="_blank">📜 Verified Certifications</a></li>
-+        <li><a href="https://www.linkedin.com/in/anass-hamdy-8b7a4a220/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3B76pmRKDxRZOIr5yAALXkRg%3D%3D" target="_blank" rel="noopener noreferrer">💼 LinkedIn Profile</a></li>
-+        <li><a href="https://www.credly.com/users/anass-hamdy" target="_blank" rel="noopener noreferrer">📜 Verified Certifications</a></li>
-       </ul>
-     </section>
- 
-   </div>
- 
-   <footer>
-     <p>Portfolio built with ❤️ and Jupyter Notebooks — ready to contribute, learn, and build in Germany.</p>
-     <p>
--      <a href="https://github.com/anass24/anass24.github.io">GitHub Repository</a> |
-+      <a href="https://github.com/Anass2024/anass24.github.io">GitHub Repository</a> |
-       <a href="https://anass24.github.io">Live Site</a>
-     </p>
-   </footer>
- 
- </body>
- </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anass Hamdy | Portfolio for German Master's Programs</title>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --accent: #e74c3c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      color: var(--primary);
+      border-bottom: 2px solid var(--secondary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .skill-tag {
+      background: var(--light);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .project-card {
+      background: #fafafa;
+      padding: 1.5rem;
+      border-left: 4px solid var(--secondary);
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+    }
+
+    .project-card h3 {
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .cert-list {
+      list-style: none;
+    }
+
+    .cert-list li {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+
+    .cert-list a {
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .cert-list a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: var(--dark);
+      color: white;
+      margin-top: 3rem;
+    }
+
+    footer a {
+      color: var(--secondary);
+      text-decoration: none;
+      margin: 0 1rem;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2rem;
+      }
+      .container {
+        padding: 0 1rem;
+      }
+    }
+    /* ===== SKILLS GROUPING STYLES ===== */
+.skill-category {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--secondary);
+}
+
+.skill-category h3 {
+  color: var(--dark);
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.skill-category .skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.skill-category .skill-tag {
+  background: var(--light);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>👋 Hi, I'm Anass Hamdy</h1>
+    <p>Economics Graduate | Business & Analytics Focus</p>
+  </header>
+
+  <div class="container">
+
+    <section id="about">
+      <h2>About Me</h2>
+      <p class="tagline"><strong>I turn data into business opportunities.</strong></p>
+      <p>Economics and Management graduate with advanced technical proficiency in Data Analytics and Machine Learning (Python, R, SQL). Passionate about bridging the gap between quantitative analysis and strategic business management to drive digital innovation and optimize decision-making. Proven ability to translate complex data into actionable business insights through independent projects.</p>
+      <p><strong>What drives me:</strong> I believe the best entrepreneurs today aren't just creative thinkers—they're people who can extract insights from data and turn them into actionable strategies. That's why I've invested heavily in building my technical toolkit through certifications from IBM, Stanford, and Google.</p>
+      <p><strong>Currently:</strong> Eager to apply a unique combination of economic theory and technical expertise to solve real-world challenges in a rigorous Master's program.</p>
+      <p><strong>Languages:</strong> English, French, Arabic, German</p>
+    </section>
+
+    <section id="skills">
+  <h2>🛠️ Skills & Tools</h2>
+
+  <!-- Data Science & Machine Learning -->
+  <div class="skill-category">
+    <h3>Data Science & ML</h3>
+    <div class="skills">
+      <span class="skill-tag">Python (Pandas, Scikit-learn, Keras, TensorFlow)</span>
+      <span class="skill-tag">R, R Studio, R Markdown</span>
+      <span class="skill-tag">Machine Learning</span>
+    </div>
+  </div>
+
+  <!-- Data Management & BI -->
+  <div class="skill-category">
+    <h3>Business Intelligence & Workflow</h3>
+    <div class="skills">
+      <span class="skill-tag">SQL</span>
+      <span class="skill-tag">Excel / Google Sheets</span>
+      <span class="skill-tag">Microsoft Power BI</span>
+      <span class="skill-tag">IBM Cognos</span>
+      <span class="skill-tag">Git & GitHub</span>
+      <span class="skill-tag">Jupyter Notebooks</span>
+    </div>
+  </div>
+
+  <!-- Project & Version Control -->
+  <div class="skill-category">
+    <h3>Quantitative Methods & Econometrics</h3>
+    <div class="skills">
+      <span class="skill-tag">Modeling & Analysis</span>
+      <span class="skill-tag">Regression Modeling</span>
+      <span class="skill-tag">Time-Series Analysis (ARIMA)</span>
+      <span class="skill-tag">Optimization (Linear Programming)</span>
+      <span class="skill-tag">Hypothesis Testing,Statistical Inference</span>
+    </div>
+  </div>
+</section>
+
+    <section id="projects">
+      <h2>📂 Featured Projects</h2>
+      <div class="project-card">
+        <h3>Customer Segmentation & Marketing Insights</h3>
+        <p>Used R and K-Means clustering to segment 2,240 customers into 4 distinct groups based on spending, income, and engagement. Visualized clusters with PCA and feature plots to inform targeted marketing strategies.</p>
+        <a href="projects/customer_segmentation/customer_segmentation_Report.pdf" target="_blank">📄 View Report</a>
+      </div>
+      <div class="project-card">
+        <h3>Prediction & Forecasting the stock market price of Microsoft with LSTM</h3>
+        <p>This analysis aims to forecast Microsoft's stock price using deep learning methods. A robust forecasting model will be developed using historical stock market data from March 13, 1986, to December 29, 2023, to support predictions of Microsoft's stock prices.</p>
+        <a href="projects/msft_analysis/MSFT.html" target="_blank">📈 Interactive Report</a>
+      </div>
+      <div class="project-card">
+        <h3>Car Sales Strategy: Value Retention & Market Entry</h3>
+        <p>Used Excel to analyze resale value dynamics across 15+ car brands. Identified BMW as top performer (72% 1-yr retention) and quantified depreciation risk for fleet/leasing models. Proposed niche vs. volume-based go-to-market strategies for startups.</p>
+        <a href="projects/car_sales_analysis/Car_sales_analysis.pdf" target="_blank">📄 Executive Report</a> |
+        <a href="projects/car_sales_analysis/Car_sales_analysis.xlsx" target="_blank">📊 Full Analysis (Excel)</a> |
+        <a href="projects/car_sales_analysis/Car_sales_row_data.csv" target="_blank">🗃️ Raw Data (CSV)</a>
+      </div>
+    </section>
+
+    <section id="certifications">
+      <h2>📜 Certifications</h2>
+      <ul class="cert-list">
+        <li>
+          <img src="https://img.shields.io/badge/IBM-0066CC?logo=ibm&logoColor=white" alt="IBM" style="height:1.2em; margin-right:6px; vertical-align:middle;">
+          <strong>Specialized Models: Time Series and Survival Analysis</strong><br>
+          Completed: Jan 2024<br>
+          <p><strong>Skills:</strong>: Time Series Analysis and Forecasting, Unsupervised Learning, Python, Data Cleansing, Applied Machine Learning, Deep Learning, Jupyter, Data Transformation<br>
+          <a href="https://coursera.org/share/6fea878aa68d01c1281c6edd56cef52c" target="_blank">View Credential (ID: 6FEA878AA68D01C1281C6EDD56CEF52C)</a><br>
+          <em>This specialization equipped me with advanced modeling techniques I applied in my MSFT stock forecasting project.</em>
+        </li>
+        <li>
+          <img src="https://img.shields.io/badge/Stanford-4285F4?logo=stanford&logoColor=white" alt="Stanford" style="height:1.2em; margin-right:6px;">
+          <strong>Supervised Machine Learning: Regression and Classification</strong><br>
+          Completed: Feb 2024<br>
+          <p><strong>Skills:</strong> Build machine learning models in Python using popular libraries NumPy & scikit-learn.<br>
+            Build & train supervised machine learning models for prediction & binary classification tasks, including linear regression & logistic regression.</p>
+          <a href="https://www.coursera.org/account/accomplishments/verify/SPZ6Q4FMWSK3" target="_blank">View Credential (ID: SPZ6Q4FMWSK3)</a><br>
+          <em>Applied these skills in projects like Customer Segmentation (K-Means in R) and MSFT Stock Forecasting (LSTM in Python).</em>
+        </li>
+        <li>
+          <img src="https://img.shields.io/badge/Stanford-4285F4?logo=stanford&logoColor=white" alt="Stanford" style="height:1.2em; margin-right:6px;">
+          <strong>Advanced Learning Algorithms</strong><br>
+          Completed: Sep 2024<br>
+          <p><strong>Skills:</strong> Build and train a neural network with TensorFlow to perform multi-class classification.<br>
+            Build and use decision trees and tree ensemble methods, including random forests and boosted trees.</p>
+          <a href="https://coursera.org/share/4c1da26176b7e40f3df6aa845d9d8bc0" target="_blank">View Credential (ID: WNHQZ6PYOTUW)</a><br>
+          <em>Applied these concepts in my MSFT stock forecasting project (LSTM) and Customer Segmentation (tree-based feature engineering).</em>
+        </li>
+      </ul>
+    </section>
+
+    <section id="contact">
+      <h2>📧 Contact & Resources</h2>
+      <p>Feel free to reach out or explore more:</p>
+      <ul>
+        <li>📧 Email me: <a href="mailto:anass.hamdy98@gmail.com">anass.hamdy98@gmail.com</a></li>
+        <li><a href="https://www.linkedin.com/in/anass-hamdy-8b7a4a220/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3B76pmRKDxRZOIr5yAALXkRg%3D%3D" target="_blank">💼 LinkedIn Profile</a></li>
+        <li><a href="https://www.credly.com/users/anass-hamdy" target="_blank">📜 Verified Certifications</a></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>Portfolio built with ❤️ and Jupyter Notebooks — ready to contribute, learn, and build in Germany.</p>
+    <p>
+      <a href="https://github.com/anass24/anass24.github.io">GitHub Repository</a> |
+      <a href="https://anass24.github.io">Live Site</a>
+    </p>
+  </footer>
+
+</body>
+</html>
