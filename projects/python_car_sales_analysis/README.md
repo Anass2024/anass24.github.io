@@ -1,6 +1,6 @@
 # 🚗 Car Sales Data Analysis (Python)
 
-A portfolio-ready data analysis project using a car sales dataset (**157 rows, 16 columns**) to explore sales patterns, pricing, and performance metrics.  
+A data analysis project using a car sales dataset (**157 rows, 16 columns**) to explore sales patterns, pricing, and performance metrics.  
 Includes a full Markdown report with charts and reproducible steps.
 
 ## Highlights
