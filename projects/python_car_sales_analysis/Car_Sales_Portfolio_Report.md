@@ -61,7 +61,7 @@ The dataset contains manufacturer/model info and numeric features such as sales,
 ## 5) Visualizations
 
 ### 5.1 Top 10 manufacturers by sales
-![Top manufacturers](portfolio_report_assets/fig_top_manufacturers_sales.png)
+![Top manufacturers](projects/python_car_sales_analysis/insights.mdprojects/python_car_sales_analysis/fig_top_manufacturers_sales.png)
 
 ### 5.2 Price distribution by vehicle type
 ![Price by type](portfolio_report_assets/fig_price_by_vehicle_type.png)
