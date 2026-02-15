@@ -64,13 +64,13 @@ The dataset contains manufacturer/model info and numeric features such as sales,
 ![Top manufacturers](insights.mdprojects/python_car_sales_analysis/fig_top_manufacturers_sales.png)
 
 ### 5.2 Price distribution by vehicle type
-![Price by type](portfolio_report_assets/fig_price_by_vehicle_type.png)
+![Price by type](insights.mdprojects/python_car_sales_analysis/fig_price_by_vehicle_type.png)
 
 ### 5.3 Horsepower vs price
-![HP vs price](portfolio_report_assets/fig_horsepower_vs_price.png)
+![HP vs price](insights.mdprojects/python_car_sales_analysis/fig_horsepower_vs_price.png)
 
 ### 5.4 Price vs sales
-![Price vs sales](portfolio_report_assets/fig_sales_vs_price.png)
+![Price vs sales](insights.mdprojects/python_car_sales_analysis/fig_sales_vs_price.png)
 
 ## 6) Business interpretation
 - **Demand & pricing:** Sales vs price is **negative** in this dataset (r≈-0.30), suggesting lower-priced cars tend to sell more units (volume effect).  
