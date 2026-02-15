@@ -18,16 +18,16 @@ Read the full report here: **[`Car_Sales_Portfolio_Report.md`](Car_Sales_Portfol
 ## Visuals (preview)
 
 ### Top manufacturers by total sales
-![Top manufacturers](portfolio_report_assets/fig_top_manufacturers_sales.png)
+![Top manufacturers](insights.mdprojects/python_car_sales_analysis/fig_top_manufacturers_sales.png)
 
 ### Price distribution by vehicle type
-![Price by type](portfolio_report_assets/fig_price_by_vehicle_type.png)
+![Price by type](insights.mdprojects/python_car_sales_analysis/fig_price_by_vehicle_type.png)
 
 ### Horsepower vs price
-![Horsepower vs price](portfolio_report_assets/fig_horsepower_vs_price.png)
+![HP vs price](insights.mdprojects/python_car_sales_analysis/fig_horsepower_vs_price.png)
 
 ### Price vs sales
-![Price vs sales](portfolio_report_assets/fig_sales_vs_price.png)
+![Price vs sales](insights.mdprojects/python_car_sales_analysis/fig_sales_vs_price.png)
 
 ## Project structure
 ```text
