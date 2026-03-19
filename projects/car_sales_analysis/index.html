@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Sales Analysis | Anass Hamdy</title>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.7;
+      color: #333;
+      background: #f9f9f9;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--primary);
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    nav a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    nav a:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    @media (max-width: 600px) {
+      nav { flex-wrap: wrap; }
+      nav a { padding: 0.6rem 0.85rem; font-size: 0.82rem; }
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #2c3e50, #3d566e);
+      color: white;
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+    }
+
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    .meta {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      margin-bottom: 1.2rem;
+    }
+
+    .tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+    .tag {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    /* ── Content ── */
+    .container {
+      max-width: 900px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin: 2.5rem 0 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--secondary);
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      color: #2c3e50;
+      margin: 1.8rem 0 0.7rem;
+    }
+
+    p { margin-bottom: 1rem; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 0.6rem 0.9rem;
+      text-align: left;
+    }
+
+    td { padding: 0.55rem 0.9rem; border-bottom: 1px solid #ddd; }
+    tr:nth-child(even) td { background: #f2f5f8; }
+
+    /* ── Insight boxes ── */
+    .insight {
+      background: #eaf4fb;
+      border-left: 4px solid var(--secondary);
+      padding: 0.8rem 1.1rem;
+      margin: 1rem 0 1.5rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.93rem;
+    }
+
+    .insight strong { color: var(--primary); }
+
+    /* ── Charts ── */
+    .chart-wrap {
+      text-align: center;
+      margin: 1.2rem 0;
+    }
+
+    .chart-wrap img {
+      max-width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    /* ── Code ── */
+    code {
+      background: #eee;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.88em;
+    }
+
+    pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 1rem 1.2rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    pre code { background: none; padding: 0; color: inherit; font-size: 0.9rem; }
+
+    /* ── Recommendations ── */
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.2rem;
+      margin: 1rem 0;
+    }
+
+    .rec-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-top: 3px solid var(--secondary);
+    }
+
+    .rec-card h4 { color: var(--primary); margin-bottom: 0.6rem; font-size: 0.95rem; }
+    .rec-card ul { padding-left: 1.2rem; font-size: 0.9rem; }
+    .rec-card li { margin-bottom: 0.35rem; }
+
+    /* ── Tech stack ── */
+    .stack { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.5rem; }
+
+    .stack span {
+      background: var(--primary);
+      color: white;
+      padding: 0.3rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    /* ── Back link ── */
+    .back {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: var(--secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../../index.html">Home</a>
+  <a href="../../index.html#about">About</a>
+  <a href="../../index.html#projects">Projects</a>
+  <a href="../../index.html#contact">Contact</a>
+</nav>
+
+<header>
+  <h1>🚗 Car Sales Strategy: Value Retention &amp; Market Entry</h1>
+  <p class="meta">157 models &nbsp;·&nbsp; 30 manufacturers &nbsp;·&nbsp; Python analysis</p>
+  <div class="tags">
+    <span class="tag">Python</span>
+    <span class="tag">Pandas</span>
+    <span class="tag">Matplotlib</span>
+    <span class="tag">Data Analysis</span>
+    <span class="tag">Market Research</span>
+  </div>
+</header>
+
+<div class="container">
+  <a class="back" href="../../index.html#projects">← Back to Portfolio</a>
+
+  <!-- Dataset Overview -->
+  <h2>Dataset Overview</h2>
+  <table>
+    <tr><th>Attribute</th><th>Detail</th></tr>
+    <tr><td>Models</td><td>157 car models</td></tr>
+    <tr><td>Manufacturers</td><td>30 brands</td></tr>
+    <tr><td>Variables</td><td>Price, 1-year resale value, sales volume, horsepower, fuel efficiency, engine size</td></tr>
+    <tr><td>Price range</td><td>$9.2K – $85.5K</td></tr>
+    <tr><td>Sales range</td><td>100 – 540,600 units</td></tr>
+    <tr><td>Total market volume</td><td>~8.3 million units</td></tr>
+  </table>
+
+  <p><strong>Key metric — Retention Rate:</strong><br>
+  <code>Retention Rate (%) = (1-Year Resale Value / Original Price) × 100</code><br>
+  A 75% retention rate means a car loses 25% of its value in one year.</p>
+
+  <!-- Finding 1 -->
+  <h2>1. Value Retention by Manufacturer</h2>
+
+  <div class="chart-wrap">
+    <img src="charts/chart1_manufacturer_retention.png" alt="Manufacturer Value Retention Chart" />
+  </div>
+
+  <table>
+    <tr><th>Tier</th><th>Manufacturers</th><th>Avg Retention</th></tr>
+    <tr><td>Premium-hold</td><td>Porsche, BMW</td><td>~90%</td></tr>
+    <tr><td>Reliable hold</td><td>Lexus, Toyota, Honda, VW</td><td>~78–82%</td></tr>
+    <tr><td>Average</td><td>Jeep, Audi, Acura, Mercury</td><td>~67–76%</td></tr>
+    <tr><td>High depreciation</td><td>Ford, Nissan, Buick, Lincoln</td><td>~51–59%</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>Insight:</strong> Price alone does not predict retention. Saturn (avg $12.5K) retains 82% — outperforming Cadillac ($38.8K, 60%). Brand loyalty and perceived reliability matter more than sticker price.
+  </div>
+
+  <!-- Finding 2 -->
+  <h2>2. Price vs. Value Retention</h2>
+
+  <div class="chart-wrap">
+    <img src="charts/chart2_price_vs_retention.png" alt="Price vs Value Retention Chart" />
+  </div>
+
+  <ul style="padding-left:1.4rem; margin-bottom:1rem;">
+    <li><strong>No strong linear relationship</strong> between price and retention — expensive cars depreciate as fast as cheap ones if the brand lacks prestige or demand.</li>
+    <li><strong>Sweet spot models</strong> (high retention + high sales): Toyota Camry, Honda Accord, Honda CR-V — affordable, high-volume, strong resale.</li>
+    <li><strong>Luxury trap:</strong> Lincoln Continental ($39.1K, 52.5%) and Cadillac DeVille lose more in absolute dollars than economy cars.</li>
+  </ul>
+
+  <!-- Finding 3 -->
+  <h2>3. Top &amp; Bottom Models</h2>
+
+  <div class="chart-wrap">
+    <img src="charts/chart3_top_bottom_models.png" alt="Top and Bottom Models Chart" />
+  </div>
+
+  <h3>Top 10 by Retention</h3>
+  <table>
+    <tr><th>Model</th><th>Price</th><th>Resale</th><th>Retention</th></tr>
+    <tr><td>Porsche Boxster</td><td>$41.4K</td><td>$41.2K</td><td><strong>99.6%</strong></td></tr>
+    <tr><td>Jeep Wrangler</td><td>$14.5K</td><td>$13.5K</td><td>93.2%</td></tr>
+    <tr><td>BMW 528i</td><td>$38.9K</td><td>$36.1K</td><td>92.9%</td></tr>
+    <tr><td>Audi A4</td><td>$24.0K</td><td>$22.3K</td><td>92.8%</td></tr>
+    <tr><td>Toyota Celica</td><td>$16.9K</td><td>$15.4K</td><td>91.5%</td></tr>
+    <tr><td>Porsche Carrera Cabrio</td><td>$75.0K</td><td>$67.5K</td><td>90.1%</td></tr>
+    <tr><td>Toyota 4Runner</td><td>$22.3K</td><td>$19.4K</td><td>87.2%</td></tr>
+    <tr><td>Honda CR-V</td><td>$20.6K</td><td>$17.7K</td><td>86.2%</td></tr>
+    <tr><td>Saturn SL</td><td>$10.7K</td><td>$9.2K</td><td>86.1%</td></tr>
+    <tr><td>Honda Accord</td><td>$15.3K</td><td>$13.2K</td><td>86.1%</td></tr>
+  </table>
+
+  <h3>Bottom 5 by Retention (Highest Depreciation Risk)</h3>
+  <table>
+    <tr><th>Model</th><th>Price</th><th>Resale</th><th>Retention</th><th>1-yr Loss</th></tr>
+    <tr><td>Buick LeSabre</td><td>$27.9K</td><td>$13.4K</td><td>47.9%</td><td>-$14.5K</td></tr>
+    <tr><td>Lincoln Town Car</td><td>$43.3K</td><td>$21.7K</td><td>50.1%</td><td>-$21.6K</td></tr>
+    <tr><td>Dodge Stratus</td><td>$20.2K</td><td>$10.2K</td><td>50.3%</td><td>-$10.0K</td></tr>
+    <tr><td>Ford Contour</td><td>$17.0K</td><td>$8.8K</td><td>51.9%</td><td>-$8.2K</td></tr>
+    <tr><td>Ford Explorer</td><td>$31.9K</td><td>$16.6K</td><td>52.1%</td><td>-$15.3K</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>Insight:</strong> The Lincoln Town Car loses $21,600 in one year — nearly the full price of a Honda Accord. For fleet buyers, this difference compounds dramatically across a vehicle fleet.
+  </div>
+
+  <!-- Finding 4 -->
+  <h2>4. Market Positioning Map</h2>
+
+  <div class="chart-wrap">
+    <img src="charts/chart4_market_positioning.png" alt="Market Positioning Map" />
+  </div>
+
+  <table>
+    <tr><th>Quadrant</th><th>Characteristics</th><th>Examples</th></tr>
+    <tr><td><strong>High Volume / Budget</strong></td><td>Mass-market, affordable, high retention</td><td>Honda Civic, Toyota Camry, Ford Focus</td></tr>
+    <tr><td><strong>Premium Niche</strong></td><td>High price, low volume, strong retention</td><td>Porsche, BMW, Lexus</td></tr>
+    <tr><td><strong>Mid-Premium / Low Volume</strong></td><td>High price, moderate volume, mixed retention</td><td>Lincoln, Cadillac</td></tr>
+    <tr><td><strong>Budget / Low Volume</strong></td><td>Niche economy, variable retention</td><td>Saturn, Plymouth</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>For market entrants:</strong> Competing in the High Volume / Budget quadrant requires scale and brand trust. Premium Niche requires established prestige. The least competitive opening is Mid-Premium — where retention is weaker, volume is low, and incumbents are vulnerable.
+  </div>
+
+  <!-- Finding 5 -->
+  <h2>5. Depreciation Cost by Manufacturer</h2>
+
+  <div class="chart-wrap">
+    <img src="charts/chart5_depreciation_cost.png" alt="Depreciation Cost by Manufacturer" />
+  </div>
+
+  <table>
+    <tr><th>Tier</th><th>Manufacturers</th><th>Avg 1-yr Loss</th></tr>
+    <tr><td>High (&gt;$15K)</td><td>Lincoln, Porsche, Jaguar, Cadillac</td><td>$15K–$22K</td></tr>
+    <tr><td>Medium ($8K–$15K)</td><td>BMW, Mercedes, Audi, Infiniti</td><td>$8K–$14K</td></tr>
+    <tr><td>Low (&lt;$8K)</td><td>Saturn, Hyundai, Honda, Toyota</td><td>$2K–$6K</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>Note:</strong> Porsche appears in "high depreciation cost" because its cars are expensive — but its <strong>retention rate</strong> is 91.7%. Context matters: a $41K car losing $3K is very different from a $25K car losing the same amount.
+  </div>
+
+  <!-- Recommendations -->
+  <h2>Strategic Recommendations</h2>
+
+  <div class="rec-grid">
+    <div class="rec-card">
+      <h4>For Individual Buyers</h4>
+      <ul>
+        <li><strong>Best value:</strong> Honda Accord, Toyota Camry, Jeep Wrangler</li>
+        <li><strong>Avoid if resale matters:</strong> Lincoln, Buick, Ford Explorer — lose 40–50% in year one</li>
+      </ul>
+    </div>
+    <div class="rec-card">
+      <h4>For Fleet &amp; Leasing Companies</h4>
+      <ul>
+        <li><strong>Prioritize:</strong> Toyota, Honda, BMW — lowest total cost of ownership</li>
+        <li><strong>Avoid:</strong> Domestic luxury (Lincoln, Cadillac) — steep depreciation destroys fleet ROI</li>
+      </ul>
+    </div>
+    <div class="rec-card">
+      <h4>For Market Entrants</h4>
+      <ul>
+        <li><strong>Volume strategy:</strong> $15K–$25K range with reliability focus — retention is the differentiator</li>
+        <li><strong>Niche strategy:</strong> $30K–$50K premium segment — requires strong brand identity</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <h2>Project Files</h2>
+  <table>
+    <tr><th>File</th><th>Description</th></tr>
+    <tr><td><code>Car_sales_row_data.csv</code></td><td>Raw dataset</td></tr>
+    <tr><td><code>analysis.py</code></td><td>Python analysis — generates all 5 charts</td></tr>
+    <tr><td><code>Car_sales_analysis.xlsx</code></td><td>Excel workbook with full analysis</td></tr>
+    <tr><td><code>charts/</code></td><td>All generated chart images</td></tr>
+  </table>
+
+  <!-- How to run -->
+  <h2>How to Run</h2>
+  <pre><code>pip install matplotlib numpy pandas
+python3 analysis.py</code></pre>
+  <p>Charts are saved to the <code>charts/</code> directory.</p>
+
+  <!-- Tech stack -->
+  <h2>Tech Stack</h2>
+  <div class="stack">
+    <span>Python</span>
+    <span>Pandas</span>
+    <span>Matplotlib</span>
+    <span>NumPy</span>
+    <span>Excel</span>
+  </div>
+</div>
+
+</body>
+</html>
