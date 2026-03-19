@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Car Sales Analysis | Anass Hamdy</title>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.7;
+      color: #333;
+      background: #f9f9f9;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--primary);
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    nav a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    nav a:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    @media (max-width: 600px) {
+      nav { flex-wrap: wrap; }
+      nav a { padding: 0.6rem 0.85rem; font-size: 0.82rem; }
+    }
+
+    header {
+      background: linear-gradient(135deg, #2c3e50, #3d566e);
+      color: white;
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+    }
+
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .meta { font-size: 0.95rem; opacity: 0.85; margin-bottom: 1.2rem; }
+
+    .tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .tag {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin: 2.5rem 0 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--secondary);
+    }
+
+    h3 { font-size: 1.1rem; color: var(--primary); margin: 1.6rem 0 0.6rem; }
+
+    p { margin-bottom: 1rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 0.6rem 0.9rem;
+      text-align: left;
+    }
+
+    td { padding: 0.55rem 0.9rem; border-bottom: 1px solid #ddd; }
+    tr:nth-child(even) td { background: #f2f5f8; }
+    td:last-child, th:last-child { text-align: right; }
+
+    .insight {
+      background: #eaf4fb;
+      border-left: 4px solid var(--secondary);
+      padding: 0.8rem 1.1rem;
+      margin: 1rem 0 1.5rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.93rem;
+    }
+
+    .warning {
+      background: #fef9e7;
+      border-left: 4px solid #f39c12;
+      padding: 0.8rem 1.1rem;
+      margin: 1rem 0 1.5rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.93rem;
+    }
+
+    .chart-wrap {
+      text-align: center;
+      margin: 1.2rem 0 2rem;
+    }
+
+    .chart-wrap img {
+      max-width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    .chart-wrap p {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    code {
+      background: #eee;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.88em;
+    }
+
+    pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 1rem 1.2rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    pre code { background: none; padding: 0; color: inherit; font-size: 0.9rem; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-top: 3px solid var(--secondary);
+    }
+
+    .stat-card .value { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
+    .stat-card .label { font-size: 0.8rem; color: #666; margin-top: 0.2rem; }
+
+    .corr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 500px) { .corr-grid { grid-template-columns: 1fr; } }
+
+    .corr-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .corr-card .r-value { font-size: 2rem; font-weight: bold; }
+    .corr-card .r-pos { color: #2ecc71; }
+    .corr-card .r-neg { color: #e74c3c; }
+    .corr-card .r-label { font-size: 0.85rem; color: #555; margin-top: 0.2rem; }
+
+    .stack { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.5rem; }
+    .stack span {
+      background: var(--primary);
+      color: white;
+      padding: 0.3rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: var(--secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .back:hover { text-decoration: underline; }
+
+    ul { padding-left: 1.4rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.3rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../../index.html">Home</a>
+  <a href="../../index.html#about">About</a>
+  <a href="../../index.html#projects">Projects</a>
+  <a href="../../index.html#contact">Contact</a>
+</nav>
+
+<header>
+  <h1>🐍 Car Sales Data Analysis (Python)</h1>
+  <p class="meta">157 rows · 16 columns · Standard library + Matplotlib</p>
+  <div class="tags">
+    <span class="tag">Python</span>
+    <span class="tag">CSV</span>
+    <span class="tag">Matplotlib</span>
+    <span class="tag">Statistics</span>
+    <span class="tag">Data Quality</span>
+  </div>
+</header>
+
+<div class="container">
+  <a class="back" href="../../index.html#projects">← Back to Portfolio</a>
+
+  <!-- Overview stats -->
+  <h2>Dataset Overview</h2>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="value">157</div><div class="label">Car Models</div></div>
+    <div class="stat-card"><div class="value">16</div><div class="label">Columns</div></div>
+    <div class="stat-card"><div class="value">30</div><div class="label">Manufacturers</div></div>
+    <div class="stat-card"><div class="value">2</div><div class="label">Vehicle Types</div></div>
+  </div>
+
+  <!-- Data quality -->
+  <h2>Data Quality</h2>
+  <table>
+    <tr><th>Column</th><th>Missing Values</th></tr>
+    <tr><td><code>Sales_in_thousands</code></td><td>0</td></tr>
+    <tr><td><code>Price_in_thousands</code></td><td>2</td></tr>
+    <tr><td><code>Engine_size</code></td><td>1</td></tr>
+    <tr><td><code>Horsepower</code></td><td>1</td></tr>
+    <tr><td><code>Fuel_efficiency</code></td><td>3</td></tr>
+    <tr><td><code>Power_perf_factor</code></td><td>2</td></tr>
+    <tr><td><code>__year_resale_value</code></td><td>36</td></tr>
+  </table>
+  <div class="warning">
+    <strong>Note:</strong> <code>__year_resale_value</code> has the most missing data (36 of 157 rows = 23%) — common in real-world resale datasets where not all models have recorded resale prices.
+  </div>
+
+  <!-- Chart 1 -->
+  <h2>Top 10 Manufacturers by Total Sales</h2>
+  <div class="chart-wrap">
+    <img src="portfolio_report_assets/fig_top_manufacturers_sales.png" alt="Top 10 manufacturers by total sales" />
+    <p>Total sales in thousands of units</p>
+  </div>
+
+  <table>
+    <tr><th>Rank</th><th>Manufacturer</th><th>Total Sales (thousands)</th></tr>
+    <tr><td>1</td><td>Ford</td><td>2,022.63</td></tr>
+    <tr><td>2</td><td>Dodge</td><td>910.15</td></tr>
+    <tr><td>3</td><td>Toyota</td><td>740.21</td></tr>
+    <tr><td>4</td><td>Honda</td><td>592.67</td></tr>
+    <tr><td>5</td><td>Chevrolet</td><td>554.37</td></tr>
+    <tr><td>6</td><td>Nissan</td><td>399.63</td></tr>
+    <tr><td>7</td><td>Pontiac</td><td>370.53</td></tr>
+    <tr><td>8</td><td>Jeep</td><td>293.15</td></tr>
+    <tr><td>9</td><td>Buick</td><td>242.02</td></tr>
+    <tr><td>10</td><td>Mercury</td><td>238.00</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>Insight:</strong> Ford dominates with 2M+ units — more than double second-place Dodge. The top 3 manufacturers (Ford, Dodge, Toyota) account for roughly half of total market volume.
+  </div>
+
+  <!-- Chart 2 -->
+  <h2>Price Distribution by Vehicle Type</h2>
+  <div class="chart-wrap">
+    <img src="portfolio_report_assets/fig_price_by_vehicle_type.png" alt="Price distribution by vehicle type" />
+    <p>Boxplot showing price spread across vehicle categories</p>
+  </div>
+
+  <table>
+    <tr><th>Vehicle Type</th><th>Avg Price (thousands)</th></tr>
+    <tr><td>Car</td><td>$26.32K</td></tr>
+    <tr><td>Passenger</td><td>$27.76K</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>Insight:</strong> Passenger vehicles carry a slight premium over Cars on average, but the spread within each category is wide — pricing strategy should account for model-level variance, not just type.
+  </div>
+
+  <!-- Chart 3 -->
+  <h2>Horsepower vs Price</h2>
+  <div class="chart-wrap">
+    <img src="portfolio_report_assets/fig_horsepower_vs_price.png" alt="Horsepower vs Price scatter plot" />
+    <p>Each dot = one car model · Red line = linear trend</p>
+  </div>
+
+  <!-- Chart 4 -->
+  <h2>Sales Volume vs Price</h2>
+  <div class="chart-wrap">
+    <img src="portfolio_report_assets/fig_sales_vs_price.png" alt="Sales vs Price scatter plot" />
+    <p>Each dot = one car model · Red line = linear trend</p>
+  </div>
+
+  <!-- Correlations -->
+  <h2>Correlation Results</h2>
+  <div class="corr-grid">
+    <div class="corr-card">
+      <div class="r-value r-pos">r = 0.840</div>
+      <div class="r-label">Horsepower ↔ Price<br><strong>Strong positive</strong> — higher-performance cars are priced higher. n = 155</div>
+    </div>
+    <div class="corr-card">
+      <div class="r-value r-neg">r = −0.305</div>
+      <div class="r-label">Sales ↔ Price<br><strong>Weak negative</strong> — lower-priced cars tend to sell more volume. n = 155</div>
+    </div>
+  </div>
+
+  <!-- Business takeaways -->
+  <h2>Business Takeaways</h2>
+  <ul>
+    <li><strong>Benchmark top sellers:</strong> Focus marketing analysis on Ford, Dodge, and Toyota — their product mix and pricing are what mass-market volume looks like.</li>
+    <li><strong>Separate pricing strategy by type:</strong> Car vs Passenger avg prices differ; don't apply a single pricing rule across both.</li>
+    <li><strong>Volume vs premium trade-off:</strong> The negative sales-price correlation confirms the classic volume/margin trade-off — lower price drives more units, but HP-based pricing shows performance buyers will pay up.</li>
+  </ul>
+
+  <!-- Limitations -->
+  <h2>Limitations &amp; Next Steps</h2>
+  <ul>
+    <li>Correlation ≠ causation — other variables drive both sales and price</li>
+    <li>Only two vehicle types — results may not generalize beyond this dataset</li>
+    <li>High missingness in <code>__year_resale_value</code> limits retention analysis</li>
+    <li><strong>Next:</strong> multivariate regression, outlier handling, time-based analysis if launch year data is used</li>
+  </ul>
+
+  <!-- How to run -->
+  <h2>How to Run</h2>
+  <h3>Original analysis (stdlib only — no dependencies)</h3>
+  <pre><code>python analysis.py</code></pre>
+  <p>Outputs <code>insights.md</code> and <code>top_manufacturers.csv</code>.</p>
+
+  <h3>Regenerate charts</h3>
+  <pre><code>pip install matplotlib
+python make_charts.py</code></pre>
+  <p>Saves all 4 charts to <code>portfolio_report_assets/</code>.</p>
+
+  <!-- Tech stack -->
+  <h2>Tech Stack</h2>
+  <div class="stack">
+    <span>Python 3</span>
+    <span>csv (stdlib)</span>
+    <span>math (stdlib)</span>
+    <span>Matplotlib</span>
+  </div>
+</div>
+
+</body>
+</html>
