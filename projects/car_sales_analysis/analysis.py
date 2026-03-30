@@ -1,6 +1,5 @@
 """
 Car Sales Strategy: Value Retention & Market Entry Analysis
-Author: Anass Hamdy
 Dataset: 157 car models across 30 manufacturers
 """
 
