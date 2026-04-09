@@ -2,14 +2,15 @@ import { getMonthKey } from "./utils.js";
 
 export function applyFilters(transactions, filters) {
   return transactions.filter((transaction) => {
-    const categoryMatch =
+    const matchesCategory =
       filters.category === "all" || transaction.category === filters.category;
 
-    const typeMatch = filters.type === "all" || transaction.type === filters.type;
+    const matchesType =
+      filters.type === "all" || transaction.type === filters.type;
 
-    const monthMatch =
+    const matchesMonth =
       filters.month === "all" || getMonthKey(transaction.date) === filters.month;
 
-    return categoryMatch && typeMatch && monthMatch;
+    return matchesCategory && matchesType && matchesMonth;
   });
 }

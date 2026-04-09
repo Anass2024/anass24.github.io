@@ -22,13 +22,10 @@ export function populateCategorySelect(select, categories, includeAll = false) {
 export function populateMonthFilter(select, months) {
   select.innerHTML = "";
   select.append(buildOption("all", "All months"));
-
-  months.forEach((month) => {
-    select.append(buildOption(month.value, month.label));
-  });
+  months.forEach((month) => select.append(buildOption(month.value, month.label)));
 }
 
-export function showFormMessage(element, message, variant = "") {
+export function showMessage(element, message, variant = "") {
   element.textContent = message;
   element.className = "helper-text";
   if (variant) {
@@ -45,12 +42,37 @@ export function updateSummary(summary, count, extra, elements) {
   if (!extra.topCategory) {
     elements.topCategory.textContent = "No expenses yet";
     elements.topCategoryValue.textContent = formatCurrency(0);
+    elements.insightMessage.textContent = "Add a few expense transactions to start getting insights.";
   } else {
     elements.topCategory.textContent = extra.topCategory.label;
     elements.topCategoryValue.textContent = formatCurrency(extra.topCategory.total);
+    elements.insightMessage.textContent = `You spent most on ${extra.topCategory.label} this month.`;
   }
 
   elements.spentThisMonth.textContent = formatCurrency(extra.spentThisMonth);
+}
+
+export function updateBudget(snapshot, elements) {
+  elements.input.value = snapshot.budget ? snapshot.budget : "";
+  elements.percent.textContent = `${snapshot.percentage.toFixed(0)}%`;
+  elements.spent.textContent = formatCurrency(snapshot.spentThisMonth);
+  elements.remaining.textContent = formatCurrency(snapshot.remaining);
+  elements.progress.style.width = `${Math.min(snapshot.percentage, 100)}%`;
+
+  if (!snapshot.budget) {
+    elements.message.textContent = "Set a monthly budget to track progress and get alerts.";
+    elements.message.classList.remove("budget-warning");
+    return;
+  }
+
+  if (snapshot.exceeded) {
+    elements.message.textContent = `Budget exceeded by ${formatCurrency(snapshot.spentThisMonth - snapshot.budget)}.`;
+    elements.message.classList.add("budget-warning");
+    return;
+  }
+
+  elements.message.textContent = `You still have ${formatCurrency(snapshot.remaining)} available this month.`;
+  elements.message.classList.remove("budget-warning");
 }
 
 export function renderTransactions(transactions, categoriesMap, container, template) {
@@ -59,7 +81,7 @@ export function renderTransactions(transactions, categoriesMap, container, templ
   if (!transactions.length) {
     const emptyState = document.createElement("div");
     emptyState.className = "empty-state";
-    emptyState.textContent = "No transactions yet. Add one above or change your filters.";
+    emptyState.textContent = "No transactions yet. Add your first one to start building the dashboard.";
     container.append(emptyState);
     return;
   }
@@ -74,8 +96,10 @@ export function renderTransactions(transactions, categoriesMap, container, templ
 
     fragment.querySelector(".transaction-icon").textContent = category?.icon || "🧾";
     fragment.querySelector(".transaction-title").textContent = transaction.title;
+
+    const recurringText = transaction.recurring ? " · recurring" : "";
     fragment.querySelector(".transaction-meta").textContent =
-      `${category?.label || transaction.category} · ${formatDate(transaction.date)} · ${transaction.type}`;
+      `${category?.label || transaction.category} · ${formatDate(transaction.date)} · ${transaction.type}${recurringText}`;
 
     const amount = fragment.querySelector(".transaction-amount");
     amount.textContent = `${transaction.type === "income" ? "+" : "-"}${formatCurrency(transaction.amount)}`;
@@ -84,4 +108,25 @@ export function renderTransactions(transactions, categoriesMap, container, templ
     fragment.querySelector(".delete-button").dataset.id = transaction.id;
     container.append(fragment);
   });
+}
+
+export function setLoadingState(loadingElement, loading) {
+  loadingElement.classList.toggle("hidden", !loading);
+}
+
+export function setErrorState(errorElement, message = "") {
+  errorElement.textContent = message;
+  errorElement.classList.toggle("hidden", !message);
+}
+
+export function setAuthMode({
+  authPanel,
+  appPanel,
+  userChip,
+  userEmail
+}, isAuthenticated) {
+  authPanel.classList.toggle("hidden", isAuthenticated);
+  appPanel.classList.toggle("hidden", !isAuthenticated);
+  userChip.classList.toggle("hidden", !isAuthenticated);
+  userChip.textContent = isAuthenticated ? userEmail : "";
 }

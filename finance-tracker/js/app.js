@@ -1,30 +1,55 @@
-import { CategoryChart } from "./charts.js";
-import { CATEGORIES } from "./constants.js";
+import { logInWithEmail, logOut, signUpWithEmail, watchAuthState } from "./auth.js";
+import { DashboardCharts } from "./charts.js";
+import { APP_COPY, CATEGORIES } from "./constants.js";
+import {
+  addTransaction as addTransactionDoc,
+  deleteTransaction as deleteTransactionDoc,
+  saveBudget as saveBudgetDoc,
+  subscribeToSettings,
+  subscribeToTransactions
+} from "./db.js";
 import { applyFilters } from "./filters.js";
+import { firebaseReady } from "./firebase.js";
 import {
   calculateSummary,
+  getBudgetSnapshot,
   getCategorySpending,
   getMonthOptions,
+  getMonthlyExpenseSeries,
   getSpentThisMonth,
   getTopSpendingCategory
 } from "./insights.js";
-import { store } from "./store.js";
 import {
   populateCategorySelect,
   populateMonthFilter,
   renderTransactions,
-  showFormMessage,
+  setAuthMode,
+  setErrorState,
+  setLoadingState,
+  showMessage,
+  updateBudget,
   updateSummary
 } from "./ui.js";
-import { normalizeAmount, todayIso, uid } from "./utils.js";
+import { escapeCsvValue, normalizeAmount, todayIso } from "./utils.js";
 
 const categoriesMap = new Map(CATEGORIES.map((category) => [category.value, category]));
 
 const elements = {
+  authPanel: document.querySelector("#auth-panel"),
+  appPanel: document.querySelector("#app-panel"),
+  authForm: document.querySelector("#auth-form"),
+  authEmail: document.querySelector("#auth-email"),
+  authPassword: document.querySelector("#auth-password"),
+  authMessage: document.querySelector("#auth-message"),
+  loginButton: document.querySelector("#login-button"),
+  logoutButton: document.querySelector("#logout-button"),
+  userChip: document.querySelector("#user-chip"),
   transactionForm: document.querySelector("#transaction-form"),
   resetForm: document.querySelector("#reset-form"),
+  recurringInput: document.querySelector("#recurring-input"),
+  budgetForm: document.querySelector("#budget-form"),
+  budgetInput: document.querySelector("#budget-input"),
   filtersForm: document.querySelector("#filters-form"),
-  loadDemo: document.querySelector("#load-demo"),
   categorySelect: document.querySelector("#category-select"),
   filterCategory: document.querySelector("#filter-category"),
   filterMonth: document.querySelector("#filter-month"),
@@ -33,58 +58,62 @@ const elements = {
   transactionList: document.querySelector("#transaction-list"),
   transactionTemplate: document.querySelector("#transaction-item-template"),
   formMessage: document.querySelector("#form-message"),
+  syncStatus: document.querySelector("#sync-status"),
+  exportCsv: document.querySelector("#export-csv"),
+  loadingState: document.querySelector("#loading-state"),
+  errorState: document.querySelector("#error-state"),
   balance: document.querySelector("#balance-value"),
   income: document.querySelector("#income-value"),
   expense: document.querySelector("#expense-value"),
   count: document.querySelector("#transaction-count"),
   topCategory: document.querySelector("#top-category"),
   topCategoryValue: document.querySelector("#top-category-value"),
+  insightMessage: document.querySelector("#insight-message"),
   spentThisMonth: document.querySelector("#spent-this-month"),
-  categoryChart: document.querySelector("#category-chart")
+  budgetPercent: document.querySelector("#budget-percent"),
+  budgetSpent: document.querySelector("#budget-spent"),
+  budgetRemaining: document.querySelector("#budget-remaining"),
+  budgetProgress: document.querySelector("#budget-progress"),
+  budgetMessage: document.querySelector("#budget-message"),
+  categoryChart: document.querySelector("#category-chart"),
+  trendChart: document.querySelector("#trend-chart")
 };
 
-const chart = new CategoryChart(elements.categoryChart);
+const charts = new DashboardCharts({
+  categoryCanvas: elements.categoryChart,
+  trendCanvas: elements.trendChart
+});
 
 const state = {
-  transactions: store.getTransactions(),
+  user: null,
+  transactions: [],
+  budget: 0,
   filters: {
     category: "all",
     month: "all",
     type: "all"
-  }
+  },
+  unsubTransactions: null,
+  unsubSettings: null
 };
 
-function getDemoTransactions() {
-  const entries = [
-    ["Salary payment", 3200, "income", "other", "2026-04-01"],
-    ["Apartment rent", 980, "expense", "rent", "2026-04-02"],
-    ["Groceries", 146.35, "expense", "food", "2026-04-04"],
-    ["Bus pass", 52, "expense", "transport", "2026-04-05"],
-    ["Freelance payment", 740, "income", "other", "2026-04-08"],
-    ["Groceries", 132.2, "expense", "food", "2026-04-11"],
-    ["Taxi", 18.5, "expense", "transport", "2026-04-13"],
-    ["House supplies", 74.9, "expense", "other", "2026-04-16"],
-    ["Salary payment", 3200, "income", "other", "2026-03-01"],
-    ["Apartment rent", 980, "expense", "rent", "2026-03-02"],
-    ["Groceries", 154.8, "expense", "food", "2026-03-06"],
-    ["Train tickets", 67.4, "expense", "transport", "2026-03-09"],
-    ["Utilities", 88.2, "expense", "other", "2026-03-12"],
-    ["Groceries", 121.75, "expense", "food", "2026-03-18"],
-    ["Salary payment", 3100, "income", "other", "2026-02-01"],
-    ["Apartment rent", 950, "expense", "rent", "2026-02-02"],
-    ["Groceries", 140.15, "expense", "food", "2026-02-07"],
-    ["Metro card", 44, "expense", "transport", "2026-02-10"],
-    ["Doctor visit", 62, "expense", "other", "2026-02-17"]
-  ];
+function setSyncStatus(label) {
+  elements.syncStatus.textContent = label;
+}
 
-  return entries.map(([title, amount, type, category, date]) => ({
-    id: uid(),
-    title,
-    amount,
-    type,
-    category,
-    date
-  }));
+function validateAuthInputs() {
+  const email = elements.authEmail.value.trim();
+  const password = elements.authPassword.value;
+
+  if (!email || !password) {
+    return { error: "Please enter both email and password." };
+  }
+
+  if (password.length < 6) {
+    return { error: "Password must be at least 6 characters." };
+  }
+
+  return { value: { email, password } };
 }
 
 function validateTransaction(formData) {
@@ -94,6 +123,7 @@ function validateTransaction(formData) {
   const type = formData.get("type");
   const category = formData.get("category");
   const date = formData.get("date");
+  const recurring = formData.get("recurring") === "on";
 
   if (!title || !amountValue || !type || !category || !date) {
     return { error: "Please complete all fields before saving." };
@@ -109,32 +139,14 @@ function validateTransaction(formData) {
 
   return {
     value: {
-      id: uid(),
       title,
       amount,
       type,
       category,
-      date
+      date,
+      recurring
     }
   };
-}
-
-function saveTransactions(nextTransactions) {
-  // Persist first, then update in-memory state so the UI never implies a save
-  // worked when the browser storage layer actually rejected it.
-  const didSave = store.saveTransactions(nextTransactions);
-
-  if (!didSave) {
-    showFormMessage(
-      elements.formMessage,
-      "Could not save your data in this browser. Please check local storage settings.",
-      "error"
-    );
-    return false;
-  }
-
-  state.transactions = nextTransactions;
-  return true;
 }
 
 function render() {
@@ -143,7 +155,9 @@ function render() {
   const categorySpending = getCategorySpending(filteredTransactions, categoriesMap);
   const topCategory = getTopSpendingCategory(state.transactions, categoriesMap);
   const spentThisMonth = getSpentThisMonth(state.transactions);
+  const budgetSnapshot = getBudgetSnapshot(state.budget, spentThisMonth);
   const monthOptions = getMonthOptions(state.transactions);
+  const monthlySeries = getMonthlyExpenseSeries(filteredTransactions);
 
   populateMonthFilter(elements.filterMonth, monthOptions);
   elements.filterMonth.value = state.filters.month;
@@ -155,7 +169,17 @@ function render() {
     count: elements.count,
     topCategory: elements.topCategory,
     topCategoryValue: elements.topCategoryValue,
+    insightMessage: elements.insightMessage,
     spentThisMonth: elements.spentThisMonth
+  });
+
+  updateBudget(budgetSnapshot, {
+    input: elements.budgetInput,
+    percent: elements.budgetPercent,
+    spent: elements.budgetSpent,
+    remaining: elements.budgetRemaining,
+    progress: elements.budgetProgress,
+    message: elements.budgetMessage
   });
 
   renderTransactions(
@@ -165,50 +189,177 @@ function render() {
     elements.transactionTemplate
   );
 
-  chart.render(categorySpending);
+  charts.renderCategoryChart(categorySpending);
+  charts.renderTrendChart(monthlySeries);
 }
 
 function resetForm() {
   elements.transactionForm.reset();
   elements.transactionForm.elements.date.value = todayIso();
-  showFormMessage(elements.formMessage, "");
+  elements.recurringInput.checked = false;
+  showMessage(elements.formMessage, "");
 }
 
-function handleSubmit(event) {
-  event.preventDefault();
-
-  const result = validateTransaction(new FormData(elements.transactionForm));
-  if (result.error) {
-    showFormMessage(elements.formMessage, result.error, "error");
-    return;
-  }
-
-  const nextTransactions = [...state.transactions, result.value];
-  if (!saveTransactions(nextTransactions)) {
-    return;
-  }
-
-  resetForm();
-  showFormMessage(elements.formMessage, "Transaction saved.", "success");
-  render();
+function clearSubscriptions() {
+  state.unsubTransactions?.();
+  state.unsubSettings?.();
+  state.unsubTransactions = null;
+  state.unsubSettings = null;
 }
 
-function handleDelete(event) {
-  const button = event.target.closest(".delete-button");
-  if (!button?.dataset.id) {
-    return;
-  }
-
-  const nextTransactions = state.transactions.filter(
-    (transaction) => transaction.id !== button.dataset.id
+function exportTransactionsCsv() {
+  const headers = ["id", "title", "amount", "type", "category", "date", "recurring"];
+  const rows = state.transactions.map((transaction) =>
+    [
+      escapeCsvValue(transaction.id),
+      escapeCsvValue(transaction.title),
+      transaction.amount,
+      escapeCsvValue(transaction.type),
+      escapeCsvValue(transaction.category),
+      escapeCsvValue(transaction.date),
+      escapeCsvValue(transaction.recurring ? "yes" : "no")
+    ].join(",")
   );
 
-  if (!saveTransactions(nextTransactions)) {
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "pulsebudget-transactions.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function handleSignUp(event) {
+  event.preventDefault();
+  const result = validateAuthInputs();
+  if (result.error) {
+    showMessage(elements.authMessage, result.error, "error");
     return;
   }
 
-  showFormMessage(elements.formMessage, "Transaction deleted.", "success");
-  render();
+  try {
+    showMessage(elements.authMessage, "Creating account...");
+    await signUpWithEmail(result.value.email, result.value.password);
+    showMessage(elements.authMessage, "Account created.", "success");
+  } catch (error) {
+    showMessage(elements.authMessage, error.message || "Could not create account.", "error");
+  }
+}
+
+async function handleLogIn() {
+  const result = validateAuthInputs();
+  if (result.error) {
+    showMessage(elements.authMessage, result.error, "error");
+    return;
+  }
+
+  try {
+    showMessage(elements.authMessage, "Logging in...");
+    await logInWithEmail(result.value.email, result.value.password);
+    showMessage(elements.authMessage, "Logged in.", "success");
+  } catch (error) {
+    showMessage(elements.authMessage, error.message || "Could not log in.", "error");
+  }
+}
+
+async function handleLogout() {
+  try {
+    await logOut();
+  } catch (error) {
+    setErrorState(elements.errorState, error.message || "Could not log out.");
+  }
+}
+
+function bindUserData(user) {
+  clearSubscriptions();
+  state.user = user;
+  state.transactions = [];
+  state.budget = 0;
+  setLoadingState(elements.loadingState, true);
+  setErrorState(elements.errorState, "");
+  setSyncStatus(APP_COPY.syncLoading);
+
+  state.unsubTransactions = subscribeToTransactions(
+    user.uid,
+    (transactions) => {
+      state.transactions = transactions;
+      setLoadingState(elements.loadingState, false);
+      setSyncStatus(APP_COPY.syncReady);
+      render();
+    },
+    (error) => {
+      setLoadingState(elements.loadingState, false);
+      setErrorState(elements.errorState, error.message || "Failed to sync transactions.");
+    }
+  );
+
+  state.unsubSettings = subscribeToSettings(
+    user.uid,
+    (settings) => {
+      state.budget = Number(settings.budget) || 0;
+      render();
+    },
+    (error) => {
+      setErrorState(elements.errorState, error.message || "Failed to sync settings.");
+    }
+  );
+}
+
+async function handleTransactionSubmit(event) {
+  event.preventDefault();
+  const result = validateTransaction(new FormData(elements.transactionForm));
+
+  if (result.error) {
+    showMessage(elements.formMessage, result.error, "error");
+    return;
+  }
+
+  try {
+    showMessage(elements.formMessage, "Saving transaction...");
+    await addTransactionDoc(state.user.uid, result.value);
+    resetForm();
+    showMessage(elements.formMessage, "Transaction saved.", "success");
+  } catch (error) {
+    showMessage(elements.formMessage, error.message || "Could not save transaction.", "error");
+  }
+}
+
+async function handleDelete(event) {
+  const button = event.target.closest(".delete-button");
+  if (!button?.dataset.id || !state.user) {
+    return;
+  }
+
+  try {
+    await deleteTransactionDoc(state.user.uid, button.dataset.id);
+    showMessage(elements.formMessage, "Transaction deleted.", "success");
+  } catch (error) {
+    showMessage(elements.formMessage, error.message || "Could not delete transaction.", "error");
+  }
+}
+
+async function handleBudgetSubmit(event) {
+  event.preventDefault();
+  const budget = normalizeAmount(elements.budgetInput.value || 0);
+
+  if (!Number.isFinite(budget) || budget < 0) {
+    showMessage(elements.budgetMessage, "Enter a valid budget amount.", "error");
+    return;
+  }
+
+  if (budget > 999999999.99) {
+    showMessage(elements.budgetMessage, "Budget is too large. Please enter a smaller value.", "error");
+    return;
+  }
+
+  try {
+    await saveBudgetDoc(state.user.uid, budget);
+    showMessage(elements.budgetMessage, "Budget saved.", "success");
+  } catch (error) {
+    showMessage(elements.budgetMessage, error.message || "Could not save budget.", "error");
+  }
 }
 
 function handleFilterChange() {
@@ -221,40 +372,72 @@ function handleFilterChange() {
 }
 
 function resetFilters() {
-  state.filters = {
-    category: "all",
-    month: "all",
-    type: "all"
-  };
-
+  state.filters = { category: "all", month: "all", type: "all" };
   elements.filterCategory.value = "all";
   elements.filterMonth.value = "all";
   elements.filterType.value = "all";
   render();
 }
 
-function loadDemoData() {
-  if (!saveTransactions(getDemoTransactions())) {
+function initAuth() {
+  if (!firebaseReady) {
+    setErrorState(elements.errorState, APP_COPY.configMissing);
+    setAuthMode(
+      {
+        authPanel: elements.authPanel,
+        appPanel: elements.appPanel,
+        userChip: elements.userChip,
+        userEmail: ""
+      },
+      false
+    );
+    showMessage(elements.authMessage, APP_COPY.configMissing, "error");
     return;
   }
 
-  showFormMessage(elements.formMessage, "Demo data loaded.", "success");
-  render();
+  watchAuthState((user) => {
+    setAuthMode(
+      {
+        authPanel: elements.authPanel,
+        appPanel: elements.appPanel,
+        userChip: elements.userChip,
+        userEmail: user?.email || ""
+      },
+      Boolean(user)
+    );
+
+    if (!user) {
+      clearSubscriptions();
+      state.user = null;
+      state.transactions = [];
+      state.budget = 0;
+      render();
+      return;
+    }
+
+    bindUserData(user);
+  });
 }
 
 function init() {
   populateCategorySelect(elements.categorySelect, CATEGORIES);
   populateCategorySelect(elements.filterCategory, CATEGORIES, true);
   elements.transactionForm.elements.date.value = todayIso();
+  setSyncStatus(APP_COPY.syncLoading);
 
-  elements.transactionForm.addEventListener("submit", handleSubmit);
+  elements.authForm.addEventListener("submit", handleSignUp);
+  elements.loginButton.addEventListener("click", handleLogIn);
+  elements.logoutButton.addEventListener("click", handleLogout);
+  elements.transactionForm.addEventListener("submit", handleTransactionSubmit);
   elements.resetForm.addEventListener("click", resetForm);
+  elements.budgetForm.addEventListener("submit", handleBudgetSubmit);
   elements.filtersForm.addEventListener("change", handleFilterChange);
   elements.resetFilters.addEventListener("click", resetFilters);
   elements.transactionList.addEventListener("click", handleDelete);
-  elements.loadDemo.addEventListener("click", loadDemoData);
+  elements.exportCsv.addEventListener("click", exportTransactionsCsv);
 
   render();
+  initAuth();
 }
 
 init();

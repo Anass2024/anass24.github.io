@@ -33,10 +33,14 @@ export function normalizeAmount(value) {
   return Math.round(Number(value) * 100) / 100;
 }
 
+export function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+export function escapeCsvValue(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Finance Tracker</title>
+  <title>PulseBudget</title>
   <meta
     name="description"
-    content="A reliable personal finance tracker with local storage, filters, insights, and category charts."
+    content="A SaaS-ready personal finance dashboard with Firebase auth, cloud sync, budgets, recurring transactions, and exports."
   >
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,137 +19,238 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="hero">
+    <header class="marketing-shell">
       <div>
-        <p class="eyebrow">Reliable Finance Tracker</p>
-        <h1>Track spending clearly, keep your data safe, and understand your money faster.</h1>
+        <p class="eyebrow">PulseBudget</p>
+        <h1>Your finances, synced across devices and organized like a real product.</h1>
         <p class="hero-text">
-          Save transactions locally, filter them by month and category, and review a clean summary
-          of your income, expenses, and biggest spending area.
+          Create an account, store transactions in the cloud, follow your monthly budget,
+          and keep every device in sync in real time.
         </p>
       </div>
+      <div id="user-chip" class="user-chip hidden"></div>
     </header>
 
-    <main class="dashboard">
-      <section class="panel panel-summary">
-        <div class="section-title">
+    <main>
+      <section id="auth-panel" class="auth-panel panel">
+        <div class="auth-card">
           <div>
-            <p class="label">Summary</p>
-            <h2>Balance and insights</h2>
+            <p class="label">Account Access</p>
+            <h2>Sign up or log in</h2>
+            <p class="muted">
+              Your transactions are tied to your account and synced from Firestore in real time.
+            </p>
           </div>
-          <button id="load-demo" class="ghost-button" type="button">Load demo data</button>
+
+          <form id="auth-form" class="auth-form" novalidate>
+            <label>
+              Email
+              <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </label>
+            <label>
+              Password
+              <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters" required>
+            </label>
+            <div class="auth-actions">
+              <button id="signup-button" class="primary-button" type="submit">Create account</button>
+              <button id="login-button" class="ghost-button" type="button">Log in</button>
+            </div>
+            <p id="auth-message" class="helper-text" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="app-panel" class="hidden">
+        <div class="toolbar">
+          <div class="toolbar-copy">
+            <p class="label">Dashboard</p>
+            <h2>Finance overview</h2>
+          </div>
+          <div class="toolbar-actions">
+            <button id="sync-status" class="status-pill" type="button" disabled>Waiting for data</button>
+            <button id="export-csv" class="ghost-button" type="button">Export CSV</button>
+            <button id="logout-button" class="ghost-button" type="button">Log out</button>
+          </div>
         </div>
 
-        <div class="summary-grid">
-          <article class="stat-card balance-card">
-            <p class="label">Net balance</p>
-            <strong id="balance-value">EUR 0.00</strong>
-          </article>
-          <article class="stat-card">
-            <p class="label">Total income</p>
-            <strong id="income-value" class="positive">EUR 0.00</strong>
-          </article>
-          <article class="stat-card">
-            <p class="label">Total expenses</p>
-            <strong id="expense-value" class="negative">EUR 0.00</strong>
-          </article>
-          <article class="stat-card">
-            <p class="label">Top spending category</p>
-            <strong id="top-category">No expenses yet</strong>
-            <span id="top-category-value" class="muted">EUR 0.00</span>
-          </article>
-          <article class="stat-card">
-            <p class="label">Spent this month</p>
-            <strong id="spent-this-month">EUR 0.00</strong>
-            <span id="spent-this-month-detail" class="muted">Based on expense transactions only.</span>
-          </article>
-          <article class="stat-card">
-            <p class="label">Transactions</p>
-            <strong id="transaction-count">0</strong>
-            <span class="muted">Saved automatically in your browser.</span>
-          </article>
-        </div>
+        <div id="loading-state" class="notice-card">Loading your data...</div>
+        <div id="error-state" class="notice-card error-card hidden"></div>
 
-        <div class="chart-panel">
-          <div class="section-title compact">
-            <div>
-              <p class="label">Chart</p>
-              <h3>Expenses by category</h3>
+        <section class="panel summary-panel">
+          <div class="summary-grid">
+            <article class="stat-card balance-card">
+              <p class="label">Balance</p>
+              <strong id="balance-value">EUR 0.00</strong>
+            </article>
+            <article class="stat-card">
+              <p class="label">Income</p>
+              <strong id="income-value" class="positive">EUR 0.00</strong>
+            </article>
+            <article class="stat-card">
+              <p class="label">Expenses</p>
+              <strong id="expense-value" class="negative">EUR 0.00</strong>
+            </article>
+            <article class="stat-card">
+              <p class="label">Top category</p>
+              <strong id="top-category">No expenses yet</strong>
+              <span id="top-category-value" class="muted">EUR 0.00</span>
+            </article>
+            <article class="stat-card">
+              <p class="label">Spent this month</p>
+              <strong id="spent-this-month">EUR 0.00</strong>
+              <span class="muted">Expense transactions only.</span>
+            </article>
+            <article class="stat-card">
+              <p class="label">Transactions</p>
+              <strong id="transaction-count">0</strong>
+              <span class="muted">Updated live from the cloud.</span>
+            </article>
+          </div>
+          <div class="insight-banner">
+            <strong id="insight-message">Start by adding your first transaction.</strong>
+          </div>
+        </section>
+
+        <section class="middle-grid">
+          <div class="panel">
+            <div class="section-title compact">
+              <div>
+                <p class="label">Charts</p>
+                <h3>Spending overview</h3>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h4>Expenses by category</h4>
+                <canvas id="category-chart" aria-label="Expenses by category pie chart"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Spending over time</h4>
+                <canvas id="trend-chart" aria-label="Spending line chart"></canvas>
+              </div>
             </div>
           </div>
-          <canvas id="category-chart" aria-label="Expenses by category pie chart"></canvas>
-        </div>
-      </section>
 
-      <section class="panel panel-form">
-        <div class="section-title">
-          <div>
-            <p class="label">Add Transaction</p>
-            <h2>Record income or expense</h2>
+          <div class="panel">
+            <div class="section-title compact">
+              <div>
+                <p class="label">Budget</p>
+                <h3>Monthly budget</h3>
+              </div>
+            </div>
+
+            <form id="budget-form" class="budget-form">
+              <label>
+                Budget amount
+                <input id="budget-input" name="budget" type="number" min="0" max="999999999.99" step="0.01" placeholder="2500">
+              </label>
+              <button class="primary-button" type="submit">Save budget</button>
+            </form>
+
+            <div class="budget-meta">
+              <div>
+                <p class="label">Used</p>
+                <strong id="budget-percent">0%</strong>
+              </div>
+              <div>
+                <p class="label">Spent</p>
+                <strong id="budget-spent">EUR 0.00</strong>
+              </div>
+              <div>
+                <p class="label">Remaining</p>
+                <strong id="budget-remaining">EUR 0.00</strong>
+              </div>
+            </div>
+
+            <div class="progress-track" aria-hidden="true">
+              <div id="budget-progress" class="progress-bar"></div>
+            </div>
+            <p id="budget-message" class="helper-text"></p>
           </div>
-        </div>
+        </section>
 
-        <form id="transaction-form" class="transaction-form" novalidate>
-          <label>
-            Description
-            <input name="title" type="text" maxlength="80" placeholder="Groceries, Rent, Salary" required>
-          </label>
-          <label>
-            Amount
-            <input name="amount" type="number" min="0.01" max="999999999.99" step="0.01" placeholder="120.00" required>
-          </label>
-          <label>
-            Type
-            <select name="type" required>
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </label>
-          <label>
-            Category
-            <select id="category-select" name="category" required></select>
-          </label>
-          <label>
-            Date
-            <input name="date" type="date" required>
-          </label>
-          <div class="form-actions">
-            <button class="primary-button" type="submit">Save transaction</button>
-            <button id="reset-form" class="ghost-button" type="button">Reset</button>
+        <section class="panel panel-form">
+          <div class="section-title">
+            <div>
+              <p class="label">Add Transaction</p>
+              <h3>Fast entry</h3>
+            </div>
           </div>
-          <p id="form-message" class="helper-text" aria-live="polite"></p>
-        </form>
-      </section>
 
-      <section class="panel panel-transactions">
-        <div class="section-title">
-          <div>
-            <p class="label">Transactions</p>
-            <h2>History and filters</h2>
+          <form id="transaction-form" class="transaction-form" novalidate>
+            <label>
+              Description
+              <input name="title" type="text" maxlength="80" placeholder="Groceries, Salary, Rent" required>
+            </label>
+            <label>
+              Amount
+              <input name="amount" type="number" min="0.01" max="999999999.99" step="0.01" placeholder="120.00" required>
+            </label>
+            <label>
+              Type
+              <select name="type" required>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </label>
+            <label>
+              Category
+              <select id="category-select" name="category" required></select>
+            </label>
+            <label>
+              Date
+              <input name="date" type="date" required>
+            </label>
+            <label class="toggle-field">
+              <input id="recurring-input" name="recurring" type="checkbox">
+              <span>Repeat monthly</span>
+            </label>
+            <div class="form-actions">
+              <button class="primary-button" type="submit">Save transaction</button>
+              <button id="reset-form" class="ghost-button" type="button">Reset</button>
+            </div>
+            <p id="form-message" class="helper-text" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <div>
+              <p class="label">Filters</p>
+              <h3>Explore transactions</h3>
+            </div>
           </div>
-        </div>
 
-        <form id="filters-form" class="filters-form">
-          <label>
-            Category
-            <select id="filter-category" name="category"></select>
-          </label>
-          <label>
-            Month
-            <select id="filter-month" name="month"></select>
-          </label>
-          <label>
-            Type
-            <select id="filter-type" name="type">
-              <option value="all">All types</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-          </label>
-          <button id="reset-filters" class="ghost-button" type="button">Reset filters</button>
-        </form>
+          <form id="filters-form" class="filters-form">
+            <label>
+              Category
+              <select id="filter-category" name="category"></select>
+            </label>
+            <label>
+              Month
+              <select id="filter-month" name="month"></select>
+            </label>
+            <label>
+              Type
+              <select id="filter-type" name="type">
+                <option value="all">All types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+            </label>
+            <button id="reset-filters" class="ghost-button" type="button">Reset filters</button>
+          </form>
+        </section>
 
-        <div id="transaction-list" class="transaction-list"></div>
+        <section class="panel">
+          <div class="section-title">
+            <div>
+              <p class="label">Transactions</p>
+              <h3>History</h3>
+            </div>
+          </div>
+          <div id="transaction-list" class="transaction-list"></div>
+        </section>
       </section>
     </main>
   </div>
@@ -159,7 +260,7 @@
       <div class="transaction-main">
         <div class="transaction-icon"></div>
         <div>
-          <h3 class="transaction-title"></h3>
+          <h4 class="transaction-title"></h4>
           <p class="transaction-meta"></p>
         </div>
       </div>

@@ -48,12 +48,38 @@ export function getSpentThisMonth(transactions, referenceDate = new Date()) {
 
 export function getMonthOptions(transactions) {
   const keys = new Set([getMonthKey(new Date())]);
-
-  transactions.forEach((transaction) => {
-    keys.add(getMonthKey(transaction.date));
-  });
+  transactions.forEach((transaction) => keys.add(getMonthKey(transaction.date)));
 
   return [...keys]
     .sort((left, right) => right.localeCompare(left))
     .map((key) => ({ value: key, label: formatMonthKey(key) }));
+}
+
+export function getBudgetSnapshot(budget, spentThisMonth) {
+  const percentage = budget > 0 ? (spentThisMonth / budget) * 100 : 0;
+  return {
+    budget,
+    spentThisMonth,
+    percentage,
+    remaining: Math.max(budget - spentThisMonth, 0),
+    exceeded: budget > 0 && spentThisMonth > budget
+  };
+}
+
+export function getMonthlyExpenseSeries(transactions) {
+  const grouped = transactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce((accumulator, transaction) => {
+      const monthKey = getMonthKey(transaction.date);
+      accumulator[monthKey] = (accumulator[monthKey] || 0) + transaction.amount;
+      return accumulator;
+    }, {});
+
+  return Object.entries(grouped)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([month, amount]) => ({
+      month,
+      label: formatMonthKey(month),
+      amount
+    }));
 }

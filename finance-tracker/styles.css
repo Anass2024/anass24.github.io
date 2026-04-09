@@ -1,16 +1,18 @@
 :root {
-  --bg: #eef5f1;
-  --bg-accent: #e1ede7;
-  --surface: rgba(255, 255, 255, 0.88);
+  --bg: #eef4f1;
+  --bg-accent: #dce8e2;
+  --surface: rgba(255, 255, 255, 0.9);
   --surface-strong: #ffffff;
   --surface-muted: #f4f8f6;
   --text: #14211b;
-  --muted: #677871;
+  --muted: #697971;
   --border: rgba(20, 33, 27, 0.1);
   --shadow: 0 24px 60px rgba(20, 33, 27, 0.08);
-  --accent: #1f6d58;
-  --positive: #16804b;
-  --negative: #c8443a;
+  --accent: #1d6d58;
+  --accent-soft: rgba(29, 109, 88, 0.1);
+  --positive: #13804b;
+  --negative: #c9483e;
+  --warning: #c87b22;
 }
 
 * {
@@ -27,7 +29,8 @@ body {
   font-family: "Manrope", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(31, 109, 88, 0.14), transparent 28%),
+    radial-gradient(circle at top left, rgba(29, 109, 88, 0.15), transparent 26%),
+    radial-gradient(circle at top right, rgba(201, 107, 61, 0.12), transparent 22%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
 }
 
@@ -37,24 +40,36 @@ select {
   font: inherit;
 }
 
-.app-shell {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 28px 18px 48px;
+input,
+select,
+button {
+  border-radius: 16px;
 }
 
-.hero,
-.panel {
+.app-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 18px 52px;
+}
+
+.marketing-shell,
+.panel,
+.auth-card,
+.notice-card {
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
 }
 
-.hero {
-  margin-bottom: 22px;
+.marketing-shell {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
   padding: 28px;
+  margin-bottom: 22px;
 }
 
 .eyebrow,
@@ -69,14 +84,15 @@ select {
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
 }
 
 h1 {
-  max-width: 740px;
-  font-size: clamp(2rem, 5vw, 3.6rem);
+  max-width: 720px;
+  font-size: clamp(2rem, 4.8vw, 3.8rem);
   line-height: 1.05;
 }
 
@@ -87,29 +103,74 @@ h1 {
 }
 
 .hero-text {
-  max-width: 700px;
+  max-width: 740px;
   margin: 14px 0 0;
 }
 
-.dashboard {
-  display: grid;
-  gap: 20px;
+.hidden {
+  display: none !important;
 }
 
-.panel {
+.user-chip {
+  min-width: 180px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: var(--surface-strong);
+  font-weight: 700;
+  text-align: right;
+}
+
+.auth-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-card {
+  max-width: 560px;
+  margin: 0 auto;
   padding: 24px;
 }
 
-.section-title {
+.auth-form,
+.transaction-form,
+.budget-form,
+.filters-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-actions,
+.form-actions,
+.toolbar-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: start;
+  align-items: end;
   margin-bottom: 18px;
 }
 
-.section-title.compact {
-  margin-bottom: 10px;
+.notice-card {
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.error-card {
+  color: var(--negative);
+  border-color: rgba(201, 72, 62, 0.24);
+  background: rgba(201, 72, 62, 0.08);
+}
+
+.summary-panel,
+.panel {
+  padding: 22px;
 }
 
 .summary-grid {
@@ -120,7 +181,7 @@ h1 {
 }
 
 .stat-card,
-.chart-panel,
+.chart-card,
 .transaction-item {
   padding: 18px;
   border: 1px solid var(--border);
@@ -129,7 +190,7 @@ h1 {
 }
 
 .balance-card {
-  background: linear-gradient(135deg, rgba(31, 109, 88, 0.12), rgba(255, 255, 255, 0.95));
+  background: linear-gradient(135deg, rgba(29, 109, 88, 0.14), rgba(255, 255, 255, 0.95));
 }
 
 .stat-card strong {
@@ -146,14 +207,40 @@ h1 {
   color: var(--negative);
 }
 
-.transaction-form,
-.filters-form {
-  display: grid;
-  gap: 14px;
+.insight-banner {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--accent-soft);
 }
 
-.transaction-form {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.middle-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.section-title.compact {
+  margin-bottom: 12px;
+}
+
+.chart-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.chart-card h4 {
+  margin-bottom: 12px;
+  font-size: 1rem;
 }
 
 label {
@@ -161,12 +248,6 @@ label {
   gap: 8px;
   font-size: 0.94rem;
   font-weight: 600;
-}
-
-input,
-select,
-button {
-  border-radius: 16px;
 }
 
 input,
@@ -181,20 +262,32 @@ select {
 input:focus,
 select:focus,
 button:focus {
-  outline: 3px solid rgba(31, 109, 88, 0.2);
+  outline: 3px solid rgba(29, 109, 88, 0.18);
   outline-offset: 2px;
 }
 
-.form-actions {
+.toggle-field {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 10px;
+}
+
+.toggle-field input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.primary-button,
+.ghost-button,
+.delete-button,
+.status-pill {
+  border: 1px solid transparent;
 }
 
 .primary-button,
 .ghost-button,
 .delete-button {
-  border: 1px solid transparent;
   cursor: pointer;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
@@ -208,7 +301,7 @@ button:focus {
 .primary-button {
   padding: 14px 18px;
   color: #fff;
-  background: linear-gradient(135deg, var(--accent), #2b8770);
+  background: linear-gradient(135deg, var(--accent), #2d8771);
 }
 
 .ghost-button {
@@ -218,10 +311,20 @@ button:focus {
   border-color: var(--border);
 }
 
+.status-pill {
+  padding: 12px 16px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.transaction-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .helper-text {
   min-height: 22px;
   margin: 0;
-  grid-column: 1 / -1;
 }
 
 .helper-text.error {
@@ -232,15 +335,41 @@ button:focus {
   color: var(--positive);
 }
 
+.budget-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 14px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.progress-bar {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #2d8771);
+  transition: width 0.25s ease;
+}
+
+.budget-warning {
+  color: var(--negative);
+}
+
 .filters-form {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 18px;
   align-items: end;
 }
 
 canvas {
   width: 100% !important;
-  height: 320px !important;
+  height: 300px !important;
 }
 
 .transaction-list {
@@ -251,7 +380,7 @@ canvas {
 .transaction-item {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   align-items: center;
 }
 
@@ -292,7 +421,7 @@ canvas {
 .delete-button {
   padding: 10px 14px;
   color: var(--negative);
-  background: rgba(200, 68, 58, 0.08);
+  background: rgba(201, 72, 62, 0.08);
 }
 
 .empty-state {
@@ -304,29 +433,31 @@ canvas {
   color: var(--muted);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .summary-grid,
+  .middle-grid,
   .transaction-form,
+  .budget-meta,
   .filters-form {
     grid-template-columns: 1fr;
   }
-
-  .form-actions {
-    flex-wrap: wrap;
-  }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 720px) {
   .app-shell {
-    padding: 18px 14px 36px;
+    padding: 18px 14px 34px;
   }
 
-  .hero,
-  .panel {
+  .marketing-shell,
+  .panel,
+  .auth-card,
+  .notice-card {
     padding: 20px;
     border-radius: 22px;
   }
 
+  .marketing-shell,
+  .toolbar,
   .transaction-item {
     flex-direction: column;
     align-items: start;
