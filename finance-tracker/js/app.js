@@ -210,7 +210,7 @@ function clearSubscriptions() {
   state.unsubSettings = null;
 }
 
-function loadGuestMode() {
+function loadLocalData() {
   clearSubscriptions();
   state.mode = "guest";
   state.user = null;
@@ -276,6 +276,35 @@ async function syncGuestDataToCloud(user) {
   localStore.clearGuestData();
 }
 
+function saveToLocal({ transactions = state.transactions, budget = state.budget } = {}) {
+  const transactionsSaved = localStore.saveTransactions(transactions);
+  const budgetSaved = localStore.saveBudget(budget);
+
+  if (transactionsSaved) {
+    state.transactions = localStore.getTransactions();
+  }
+
+  if (budgetSaved) {
+    state.budget = localStore.getBudget();
+  }
+
+  return transactionsSaved && budgetSaved;
+}
+
+async function saveToFirebase(userId, { transaction = null, deleteId = null, budget = null } = {}) {
+  if (transaction) {
+    await addTransactionDoc(userId, transaction);
+  }
+
+  if (deleteId) {
+    await deleteTransactionDoc(userId, deleteId);
+  }
+
+  if (budget !== null) {
+    await saveBudgetDoc(userId, budget);
+  }
+}
+
 async function handleSignUp(event) {
   event.preventDefault();
   const result = validateAuthInputs();
@@ -317,7 +346,7 @@ async function handleLogout() {
   }
 }
 
-async function bindUserData(user) {
+async function loadFirebaseData(user) {
   clearSubscriptions();
   state.user = user;
   state.mode = "cloud";
@@ -363,19 +392,27 @@ async function bindUserData(user) {
 
 async function addTransaction(transaction) {
   if (state.mode === "cloud" && state.user) {
-    return addTransactionDoc(state.user.uid, transaction);
+    await saveToFirebase(state.user.uid, { transaction });
+    return true;
   }
 
-  return localStore.saveTransactions([...state.transactions, transaction]);
+  return saveToLocal({
+    transactions: [...state.transactions, transaction],
+    budget: state.budget
+  });
 }
 
 async function deleteTransaction(transactionId) {
   if (state.mode === "cloud" && state.user) {
-    return deleteTransactionDoc(state.user.uid, transactionId);
+    await saveToFirebase(state.user.uid, { deleteId: transactionId });
+    return true;
   }
 
   const nextTransactions = state.transactions.filter((transaction) => transaction.id !== transactionId);
-  return localStore.saveTransactions(nextTransactions);
+  return saveToLocal({
+    transactions: nextTransactions,
+    budget: state.budget
+  });
 }
 
 async function saveBudget(value) {
@@ -392,11 +429,14 @@ async function saveBudget(value) {
   }
 
   if (state.mode === "cloud" && state.user) {
-    await saveBudgetDoc(state.user.uid, budget);
+    await saveToFirebase(state.user.uid, { budget });
     return true;
   }
 
-  return localStore.saveBudget(budget);
+  return saveToLocal({
+    transactions: state.transactions,
+    budget
+  });
 }
 
 async function handleTransactionSubmit(event) {
@@ -507,7 +547,7 @@ function initAuth() {
     elements.openAuthButton.disabled = true;
     elements.openAuthButton.textContent = "Login unavailable";
     setErrorState(elements.errorState, APP_COPY.configMissing);
-    loadGuestMode();
+    loadLocalData();
     return;
   }
 
@@ -525,12 +565,12 @@ function initAuth() {
     if (!user) {
       elements.userChip.classList.remove("hidden");
       elements.userChip.textContent = "Guest mode";
-      loadGuestMode();
+      loadLocalData();
       return;
     }
 
     toggleAuthPanel(false);
-    bindUserData(user);
+    loadFirebaseData(user);
   });
 }
 
@@ -540,7 +580,7 @@ function init() {
   elements.transactionForm.elements.date.value = todayIso();
   elements.userChip.classList.remove("hidden");
   elements.userChip.textContent = "Guest mode";
-  loadGuestMode();
+  loadLocalData();
 
   elements.authForm.addEventListener("submit", handleSignUp);
   elements.loginButton.addEventListener("click", handleLogIn);
