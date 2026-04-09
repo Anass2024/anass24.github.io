@@ -49,6 +49,7 @@ const elements = {
   closeAuthButton: document.querySelector("#close-auth-button"),
   userChip: document.querySelector("#user-chip"),
   guestBanner: document.querySelector("#guest-banner"),
+  loadDemoButton: document.querySelector("#load-demo-button"),
   transactionForm: document.querySelector("#transaction-form"),
   resetForm: document.querySelector("#reset-form"),
   recurringInput: document.querySelector("#recurring-input"),
@@ -105,6 +106,36 @@ const state = {
 
 function setSyncStatus(label) {
   elements.syncStatus.textContent = label;
+}
+
+function demoDate(daysAgo) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
+
+function getDemoTransactions() {
+  return [
+    { id: uid(), title: "Monthly salary", amount: 3200, type: "income", category: "other", date: demoDate(26), recurring: false },
+    { id: uid(), title: "Apartment rent", amount: 980, type: "expense", category: "rent", date: demoDate(25), recurring: true },
+    { id: uid(), title: "Supermarket groceries", amount: 148.4, type: "expense", category: "food", date: demoDate(23), recurring: false },
+    { id: uid(), title: "Bus and metro pass", amount: 54, type: "expense", category: "transport", date: demoDate(22), recurring: false },
+    { id: uid(), title: "Freelance design project", amount: 680, type: "income", category: "other", date: demoDate(19), recurring: false },
+    { id: uid(), title: "New office chair", amount: 215, type: "expense", category: "shopping", date: demoDate(17), recurring: false },
+    { id: uid(), title: "Weekly groceries", amount: 132.75, type: "expense", category: "food", date: demoDate(15), recurring: false },
+    { id: uid(), title: "Taxi ride", amount: 18.5, type: "expense", category: "transport", date: demoDate(13), recurring: false },
+    { id: uid(), title: "Streaming and apps", amount: 29.99, type: "expense", category: "other", date: demoDate(12), recurring: true },
+    { id: uid(), title: "Part-time consulting", amount: 420, type: "income", category: "other", date: demoDate(9), recurring: false },
+    { id: uid(), title: "Weekend groceries", amount: 96.2, type: "expense", category: "food", date: demoDate(7), recurring: false },
+    { id: uid(), title: "Train tickets", amount: 42, type: "expense", category: "transport", date: demoDate(6), recurring: false },
+    { id: uid(), title: "Kitchen supplies", amount: 74.6, type: "expense", category: "shopping", date: demoDate(4), recurring: false },
+    { id: uid(), title: "Coffee and lunch", amount: 24.8, type: "expense", category: "food", date: demoDate(2), recurring: false },
+    { id: uid(), title: "Groceries", amount: 118.9, type: "expense", category: "food", date: demoDate(1), recurring: false }
+  ];
+}
+
+function getDemoBudget() {
+  return 2500;
 }
 
 function validateAuthInputs() {
@@ -214,6 +245,14 @@ function loadFromLocalStorage() {
   clearSubscriptions();
   state.mode = "guest";
   state.user = null;
+  const localTransactions = localStore.getTransactions();
+  const localBudget = localStore.getBudget();
+
+  if (!localTransactions.length && !localBudget) {
+    localStore.saveTransactions(getDemoTransactions());
+    localStore.saveBudget(getDemoBudget());
+  }
+
   state.transactions = localStore.getTransactions();
   state.budget = localStore.getBudget();
   setLoadingState(elements.loadingState, false);
@@ -303,6 +342,30 @@ async function saveToFirebase(userId, { transaction = null, deleteId = null, bud
   if (budget !== null) {
     await saveBudgetDoc(userId, budget);
   }
+}
+
+async function replaceWithDemoData() {
+  const demoTransactions = getDemoTransactions();
+  const demoBudget = getDemoBudget();
+
+  if (state.mode === "cloud" && state.user) {
+    await Promise.all(
+      state.transactions.map((transaction) => deleteTransactionDoc(state.user.uid, transaction.id))
+    );
+
+    await Promise.all(
+      demoTransactions.map((transaction) => upsertTransaction(state.user.uid, transaction))
+    );
+
+    await saveBudgetDoc(state.user.uid, demoBudget);
+    return;
+  }
+
+  saveToLocalStorage({
+    transactions: demoTransactions,
+    budget: demoBudget
+  });
+  render();
 }
 
 async function handleSignUp(event) {
@@ -517,6 +580,16 @@ async function handleBudgetSubmit(event) {
   }
 }
 
+async function handleLoadDemoData() {
+  try {
+    showMessage(elements.formMessage, "Loading demo data...");
+    await replaceWithDemoData();
+    showMessage(elements.formMessage, "Demo data loaded.", "success");
+  } catch (error) {
+    showMessage(elements.formMessage, error.message || "Could not load demo data.", "error");
+  }
+}
+
 function handleFilterChange() {
   state.filters = {
     category: elements.filterCategory.value,
@@ -594,6 +667,7 @@ function init() {
   elements.resetFilters.addEventListener("click", resetFilters);
   elements.transactionList.addEventListener("click", handleDelete);
   elements.exportCsv.addEventListener("click", exportTransactionsCsv);
+  elements.loadDemoButton.addEventListener("click", handleLoadDemoData);
 
   render();
   initAuth();
