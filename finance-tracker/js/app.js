@@ -79,142 +79,314 @@ function isoDateForMonth(day, monthOffset = 0) {
   ).toISOString().slice(0, 10);
 }
 
+function createDemoTransaction({
+  title,
+  amount,
+  type,
+  category,
+  day,
+  monthOffset,
+  recurring = false
+}) {
+  const id = uid();
+  return {
+    id,
+    title,
+    amount,
+    type,
+    category,
+    date: isoDateForMonth(day, monthOffset),
+    recurring,
+    recurringGroup: recurring ? id : null
+  };
+}
+
 function getSampleTransactions() {
   return [
-    {
-      id: uid(),
+    createDemoTransaction({
       title: "Monthly salary",
       amount: 2850,
       type: "income",
       category: "salary",
-      date: isoDateForMonth(2, 0),
-      recurring: true,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 2,
+      monthOffset: 0,
+      recurring: true
+    }),
+    createDemoTransaction({
       title: "Apartment rent",
       amount: 900,
       type: "expense",
       category: "rent",
-      date: isoDateForMonth(3, 0),
-      recurring: true,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
-      title: "Groceries",
-      amount: 168.5,
-      type: "expense",
-      category: "food",
-      date: isoDateForMonth(5, 0),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
-      title: "Metro and taxis",
-      amount: 74,
-      type: "expense",
-      category: "transport",
-      date: isoDateForMonth(6, 0),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 3,
+      monthOffset: 0,
+      recurring: true
+    }),
+    createDemoTransaction({
       title: "Electricity bill",
       amount: 92,
       type: "expense",
       category: "utilities",
-      date: isoDateForMonth(7, 0),
-      recurring: true,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 7,
+      monthOffset: 0,
+      recurring: true
+    }),
+    createDemoTransaction({
+      title: "Groceries",
+      amount: 168.5,
+      type: "expense",
+      category: "food",
+      day: 5,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
+      title: "Groceries",
+      amount: 142.3,
+      type: "expense",
+      category: "food",
+      day: 19,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
+      title: "Metro and taxis",
+      amount: 74,
+      type: "expense",
+      category: "transport",
+      day: 6,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
       title: "Freelance dashboard project",
       amount: 640,
       type: "income",
       category: "freelance",
-      date: isoDateForMonth(8, 0),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 8,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
+      title: "New headphones",
+      amount: 129,
+      type: "expense",
+      category: "shopping",
+      day: 11,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
+      title: "Gym membership",
+      amount: 39,
+      type: "expense",
+      category: "health",
+      day: 13,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
       title: "Cinema and dinner",
       amount: 58,
       type: "expense",
       category: "entertainment",
-      date: isoDateForMonth(9, 0),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 9,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
       title: "Course subscription",
       amount: 45,
       type: "expense",
       category: "education",
-      date: isoDateForMonth(12, 0),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 12,
+      monthOffset: 0
+    }),
+    createDemoTransaction({
       title: "Monthly salary",
       amount: 2850,
       type: "income",
       category: "salary",
-      date: isoDateForMonth(2, -1),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 2,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
       title: "Apartment rent",
       amount: 900,
       type: "expense",
       category: "rent",
-      date: isoDateForMonth(3, -1),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 3,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
       title: "Groceries",
       amount: 151.25,
       type: "expense",
       category: "food",
-      date: isoDateForMonth(8, -1),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 8,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
       title: "Train tickets",
       amount: 88,
       type: "expense",
       category: "transport",
-      date: isoDateForMonth(10, -1),
-      recurring: false,
-      recurringGroup: null
-    },
-    {
-      id: uid(),
+      day: 10,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
       title: "Weekend trip",
       amount: 210,
       type: "expense",
       category: "travel",
-      date: isoDateForMonth(18, -1),
-      recurring: false,
-      recurringGroup: null
-    }
-  ].map((transaction) => ({
-    ...transaction,
-    recurringGroup: transaction.recurring ? transaction.id : null
-  }));
+      day: 18,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
+      title: "Freelance landing page",
+      amount: 420,
+      type: "income",
+      category: "freelance",
+      day: 21,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
+      title: "Pharmacy",
+      amount: 33,
+      type: "expense",
+      category: "health",
+      day: 16,
+      monthOffset: -1
+    }),
+    createDemoTransaction({
+      title: "Monthly salary",
+      amount: 2800,
+      type: "income",
+      category: "salary",
+      day: 2,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Apartment rent",
+      amount: 900,
+      type: "expense",
+      category: "rent",
+      day: 3,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Groceries",
+      amount: 159.9,
+      type: "expense",
+      category: "food",
+      day: 6,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Groceries",
+      amount: 137.45,
+      type: "expense",
+      category: "food",
+      day: 22,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Streaming subscriptions",
+      amount: 24,
+      type: "expense",
+      category: "entertainment",
+      day: 9,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Electricity bill",
+      amount: 86,
+      type: "expense",
+      category: "utilities",
+      day: 12,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Books and materials",
+      amount: 67,
+      type: "expense",
+      category: "education",
+      day: 15,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Mobile plan",
+      amount: 29,
+      type: "expense",
+      category: "utilities",
+      day: 17,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Client workshop",
+      amount: 510,
+      type: "income",
+      category: "freelance",
+      day: 20,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Winter jacket",
+      amount: 146,
+      type: "expense",
+      category: "shopping",
+      day: 24,
+      monthOffset: -2
+    }),
+    createDemoTransaction({
+      title: "Monthly salary",
+      amount: 2800,
+      type: "income",
+      category: "salary",
+      day: 2,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Apartment rent",
+      amount: 900,
+      type: "expense",
+      category: "rent",
+      day: 3,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Groceries",
+      amount: 144,
+      type: "expense",
+      category: "food",
+      day: 5,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Bus card recharge",
+      amount: 41,
+      type: "expense",
+      category: "transport",
+      day: 7,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Medical checkup",
+      amount: 78,
+      type: "expense",
+      category: "health",
+      day: 13,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Short getaway",
+      amount: 185,
+      type: "expense",
+      category: "travel",
+      day: 19,
+      monthOffset: -3
+    }),
+    createDemoTransaction({
+      title: "Interface audit",
+      amount: 380,
+      type: "income",
+      category: "freelance",
+      day: 23,
+      monthOffset: -3
+    })
+  ];
 }
 
 function getCurrentMonthExpenses(transactions) {
