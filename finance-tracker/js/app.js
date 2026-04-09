@@ -70,6 +70,153 @@ const state = {
   theme: store.getTheme()
 };
 
+function isoDateForMonth(day, monthOffset = 0) {
+  const reference = new Date();
+  return new Date(
+    reference.getFullYear(),
+    reference.getMonth() + monthOffset,
+    day
+  ).toISOString().slice(0, 10);
+}
+
+function getSampleTransactions() {
+  return [
+    {
+      id: uid(),
+      title: "Monthly salary",
+      amount: 2850,
+      type: "income",
+      category: "salary",
+      date: isoDateForMonth(2, 0),
+      recurring: true,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Apartment rent",
+      amount: 900,
+      type: "expense",
+      category: "rent",
+      date: isoDateForMonth(3, 0),
+      recurring: true,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Groceries",
+      amount: 168.5,
+      type: "expense",
+      category: "food",
+      date: isoDateForMonth(5, 0),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Metro and taxis",
+      amount: 74,
+      type: "expense",
+      category: "transport",
+      date: isoDateForMonth(6, 0),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Electricity bill",
+      amount: 92,
+      type: "expense",
+      category: "utilities",
+      date: isoDateForMonth(7, 0),
+      recurring: true,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Freelance dashboard project",
+      amount: 640,
+      type: "income",
+      category: "freelance",
+      date: isoDateForMonth(8, 0),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Cinema and dinner",
+      amount: 58,
+      type: "expense",
+      category: "entertainment",
+      date: isoDateForMonth(9, 0),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Course subscription",
+      amount: 45,
+      type: "expense",
+      category: "education",
+      date: isoDateForMonth(12, 0),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Monthly salary",
+      amount: 2850,
+      type: "income",
+      category: "salary",
+      date: isoDateForMonth(2, -1),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Apartment rent",
+      amount: 900,
+      type: "expense",
+      category: "rent",
+      date: isoDateForMonth(3, -1),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Groceries",
+      amount: 151.25,
+      type: "expense",
+      category: "food",
+      date: isoDateForMonth(8, -1),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Train tickets",
+      amount: 88,
+      type: "expense",
+      category: "transport",
+      date: isoDateForMonth(10, -1),
+      recurring: false,
+      recurringGroup: null
+    },
+    {
+      id: uid(),
+      title: "Weekend trip",
+      amount: 210,
+      type: "expense",
+      category: "travel",
+      date: isoDateForMonth(18, -1),
+      recurring: false,
+      recurringGroup: null
+    }
+  ].map((transaction) => ({
+    ...transaction,
+    recurringGroup: transaction.recurring ? transaction.id : null
+  }));
+}
+
 function getCurrentMonthExpenses(transactions) {
   const currentMonthKey = getMonthKey(new Date());
   return transactions
@@ -298,6 +445,16 @@ function bindEvents() {
 function init() {
   state.transactions = store.getTransactions();
   state.budget = store.getBudget();
+
+  if (!state.transactions.length) {
+    state.transactions = getSampleTransactions();
+    store.saveTransactions(state.transactions);
+  }
+
+  if (!state.budget) {
+    state.budget = 3200;
+    store.saveBudget(state.budget);
+  }
 
   populateCategorySelects({
     categorySelect: elements.categorySelect,
