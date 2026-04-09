@@ -7,85 +7,50 @@ function buildOption(value, label) {
   return option;
 }
 
-export function populateCategorySelects({ categorySelect, filterCategory, categories }) {
-  categorySelect.innerHTML = "";
-  filterCategory.innerHTML = "";
+export function populateCategorySelect(select, categories, includeAll = false) {
+  select.innerHTML = "";
 
-  filterCategory.append(buildOption("all", "All categories"));
+  if (includeAll) {
+    select.append(buildOption("all", "All categories"));
+  }
 
   categories.forEach((category) => {
-    categorySelect.append(buildOption(category.value, `${category.icon} ${category.label}`));
-    filterCategory.append(buildOption(category.value, `${category.icon} ${category.label}`));
+    select.append(buildOption(category.value, `${category.icon} ${category.label}`));
   });
 }
 
-export function updateSummary(summary, count, elements) {
+export function populateMonthFilter(select, months) {
+  select.innerHTML = "";
+  select.append(buildOption("all", "All months"));
+
+  months.forEach((month) => {
+    select.append(buildOption(month.value, month.label));
+  });
+}
+
+export function showFormMessage(element, message, variant = "") {
+  element.textContent = message;
+  element.className = "helper-text";
+  if (variant) {
+    element.classList.add(variant);
+  }
+}
+
+export function updateSummary(summary, count, extra, elements) {
   elements.balance.textContent = formatCurrency(summary.balance);
   elements.income.textContent = formatCurrency(summary.income);
   elements.expense.textContent = formatCurrency(summary.expenses);
-  elements.count.textContent = count;
-}
+  elements.count.textContent = String(count);
 
-export function updateBudget({ budget, spent, remaining, percentage }, elements) {
-  elements.input.value = budget ? budget : "";
-  elements.spent.textContent = formatCurrency(spent);
-  elements.remaining.textContent = formatCurrency(remaining);
-  elements.percent.textContent = `${percentage.toFixed(0)}%`;
-  elements.progress.style.width = `${Math.min(percentage, 100)}%`;
-
-  if (!budget) {
-    elements.alert.textContent = "Set a monthly budget to start tracking progress.";
-    elements.alert.classList.remove("budget-warning");
-    elements.pill.textContent = "Budget not set";
-    return;
-  }
-
-  if (percentage > 100) {
-    elements.alert.textContent = `Budget exceeded by ${formatCurrency(spent - budget)}.`;
-    elements.alert.classList.add("budget-warning");
-    elements.pill.textContent = "Budget exceeded";
-    return;
-  }
-
-  elements.alert.textContent = `You still have ${formatCurrency(remaining)} available this month.`;
-  elements.alert.classList.remove("budget-warning");
-  elements.pill.textContent = "Budget on track";
-}
-
-export function updateInsights(
-  { topCategory, comparison, categorySpending },
-  elements
-) {
-  if (!topCategory) {
+  if (!extra.topCategory) {
     elements.topCategory.textContent = "No expenses yet";
     elements.topCategoryValue.textContent = formatCurrency(0);
   } else {
-    elements.topCategory.textContent = topCategory.label;
-    elements.topCategoryValue.textContent = formatCurrency(topCategory.total);
+    elements.topCategory.textContent = extra.topCategory.label;
+    elements.topCategoryValue.textContent = formatCurrency(extra.topCategory.total);
   }
 
-  const direction = comparison.changePercent >= 0 ? "up" : "down";
-  elements.monthComparison.textContent = `${comparison.changePercent.toFixed(1)}% ${direction}`;
-  elements.monthComparisonDetail.textContent =
-    `${formatCurrency(comparison.currentMonthExpenses)} this month vs ${formatCurrency(comparison.lastMonthExpenses)} last month`;
-
-  elements.categoryInsights.innerHTML = "";
-  if (!categorySpending.length) {
-    const item = document.createElement("li");
-    item.textContent = "No category spending data yet.";
-    elements.categoryInsights.append(item);
-    return;
-  }
-
-  categorySpending.forEach((entry) => {
-    const item = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = entry.label;
-    const value = document.createElement("strong");
-    value.textContent = formatCurrency(entry.total);
-    item.append(label, value);
-    elements.categoryInsights.append(item);
-  });
+  elements.spentThisMonth.textContent = formatCurrency(extra.spentThisMonth);
 }
 
 export function renderTransactions(transactions, categoriesMap, container, template) {
@@ -94,7 +59,7 @@ export function renderTransactions(transactions, categoriesMap, container, templ
   if (!transactions.length) {
     const emptyState = document.createElement("div");
     emptyState.className = "empty-state";
-    emptyState.textContent = "No transactions match the current filters yet.";
+    emptyState.textContent = "No transactions yet. Add one above or change your filters.";
     container.append(emptyState);
     return;
   }
@@ -106,32 +71,17 @@ export function renderTransactions(transactions, categoriesMap, container, templ
   sortedTransactions.forEach((transaction) => {
     const fragment = template.content.cloneNode(true);
     const category = categoriesMap.get(transaction.category);
-    const transactionItem = fragment.querySelector(".transaction-item");
-    const icon = fragment.querySelector(".transaction-icon");
-    const title = fragment.querySelector(".transaction-title");
-    const subtitle = fragment.querySelector(".transaction-subtitle");
+
+    fragment.querySelector(".transaction-icon").textContent = category?.icon || "🧾";
+    fragment.querySelector(".transaction-title").textContent = transaction.title;
+    fragment.querySelector(".transaction-meta").textContent =
+      `${category?.label || transaction.category} · ${formatDate(transaction.date)} · ${transaction.type}`;
+
     const amount = fragment.querySelector(".transaction-amount");
-    const button = fragment.querySelector(".delete-button");
-
-    icon.textContent = category?.icon || "🧾";
-    title.textContent = transaction.title;
-
-    const recurringText = transaction.recurring ? " · recurring" : "";
-    subtitle.textContent =
-      `${category?.label || transaction.category} · ${formatDate(transaction.date)}${recurringText}`;
-
     amount.textContent = `${transaction.type === "income" ? "+" : "-"}${formatCurrency(transaction.amount)}`;
     amount.classList.add(transaction.type === "income" ? "positive" : "negative");
 
-    button.dataset.id = transaction.id;
-    transactionItem.dataset.id = transaction.id;
-
+    fragment.querySelector(".delete-button").dataset.id = transaction.id;
     container.append(fragment);
   });
-}
-
-export function applyTheme(theme, toggleButton) {
-  document.body.classList.toggle("dark", theme === "dark");
-  toggleButton.setAttribute("aria-pressed", String(theme === "dark"));
-  toggleButton.textContent = theme === "dark" ? "Use light mode" : "Use dark mode";
 }

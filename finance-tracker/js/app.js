@@ -1,516 +1,162 @@
+import { CategoryChart } from "./charts.js";
 import { CATEGORIES } from "./constants.js";
-import { DashboardCharts } from "./charts.js";
 import { applyFilters } from "./filters.js";
 import {
   calculateSummary,
   getCategorySpending,
-  getMonthlyExpenseComparison,
-  getMonthlyExpenseSeries,
+  getMonthOptions,
+  getSpentThisMonth,
   getTopSpendingCategory
 } from "./insights.js";
 import { store } from "./store.js";
 import {
-  applyTheme,
-  populateCategorySelects,
+  populateCategorySelect,
+  populateMonthFilter,
   renderTransactions,
-  updateBudget,
-  updateInsights,
+  showFormMessage,
   updateSummary
 } from "./ui.js";
-import { getMonthKey, normalizeAmount, uid } from "./utils.js";
+import { normalizeAmount, todayIso, uid } from "./utils.js";
 
 const categoriesMap = new Map(CATEGORIES.map((category) => [category.value, category]));
 
 const elements = {
   transactionForm: document.querySelector("#transaction-form"),
-  budgetForm: document.querySelector("#budget-form"),
+  resetForm: document.querySelector("#reset-form"),
   filtersForm: document.querySelector("#filters-form"),
+  loadDemo: document.querySelector("#load-demo"),
   categorySelect: document.querySelector("#category-select"),
   filterCategory: document.querySelector("#filter-category"),
+  filterMonth: document.querySelector("#filter-month"),
   filterType: document.querySelector("#filter-type"),
-  filterDate: document.querySelector("#filter-date"),
+  resetFilters: document.querySelector("#reset-filters"),
   transactionList: document.querySelector("#transaction-list"),
   transactionTemplate: document.querySelector("#transaction-item-template"),
-  themeToggle: document.querySelector("#theme-toggle"),
-  exportCsv: document.querySelector("#export-csv"),
-  resetFilters: document.querySelector("#reset-filters"),
+  formMessage: document.querySelector("#form-message"),
   balance: document.querySelector("#balance-value"),
   income: document.querySelector("#income-value"),
   expense: document.querySelector("#expense-value"),
   count: document.querySelector("#transaction-count"),
-  budgetInput: document.querySelector("#budget-input"),
-  budgetSpent: document.querySelector("#budget-spent"),
-  budgetRemaining: document.querySelector("#budget-remaining"),
-  budgetPercent: document.querySelector("#budget-percent"),
-  budgetProgress: document.querySelector("#budget-progress"),
-  budgetAlert: document.querySelector("#budget-alert"),
-  budgetPill: document.querySelector("#budget-status-pill"),
   topCategory: document.querySelector("#top-category"),
   topCategoryValue: document.querySelector("#top-category-value"),
-  monthComparison: document.querySelector("#month-comparison"),
-  monthComparisonDetail: document.querySelector("#month-comparison-detail"),
-  categoryInsights: document.querySelector("#category-insights"),
-  categoryChart: document.querySelector("#category-chart"),
-  trendChart: document.querySelector("#trend-chart")
+  spentThisMonth: document.querySelector("#spent-this-month"),
+  categoryChart: document.querySelector("#category-chart")
 };
 
-const charts = new DashboardCharts({
-  categoryCanvas: elements.categoryChart,
-  trendCanvas: elements.trendChart
-});
+const chart = new CategoryChart(elements.categoryChart);
 
 const state = {
-  transactions: [],
-  budget: 0,
+  transactions: store.getTransactions(),
   filters: {
     category: "all",
-    type: "all",
-    date: "all"
-  },
-  theme: store.getTheme()
+    month: "all",
+    type: "all"
+  }
 };
 
-function isoDateForMonth(day, monthOffset = 0) {
-  const reference = new Date();
-  return new Date(
-    reference.getFullYear(),
-    reference.getMonth() + monthOffset,
-    day
-  ).toISOString().slice(0, 10);
-}
+function getDemoTransactions() {
+  const entries = [
+    ["Salary payment", 3200, "income", "other", "2026-04-01"],
+    ["Apartment rent", 980, "expense", "rent", "2026-04-02"],
+    ["Groceries", 146.35, "expense", "food", "2026-04-04"],
+    ["Bus pass", 52, "expense", "transport", "2026-04-05"],
+    ["Freelance payment", 740, "income", "other", "2026-04-08"],
+    ["Groceries", 132.2, "expense", "food", "2026-04-11"],
+    ["Taxi", 18.5, "expense", "transport", "2026-04-13"],
+    ["House supplies", 74.9, "expense", "other", "2026-04-16"],
+    ["Salary payment", 3200, "income", "other", "2026-03-01"],
+    ["Apartment rent", 980, "expense", "rent", "2026-03-02"],
+    ["Groceries", 154.8, "expense", "food", "2026-03-06"],
+    ["Train tickets", 67.4, "expense", "transport", "2026-03-09"],
+    ["Utilities", 88.2, "expense", "other", "2026-03-12"],
+    ["Groceries", 121.75, "expense", "food", "2026-03-18"],
+    ["Salary payment", 3100, "income", "other", "2026-02-01"],
+    ["Apartment rent", 950, "expense", "rent", "2026-02-02"],
+    ["Groceries", 140.15, "expense", "food", "2026-02-07"],
+    ["Metro card", 44, "expense", "transport", "2026-02-10"],
+    ["Doctor visit", 62, "expense", "other", "2026-02-17"]
+  ];
 
-function createDemoTransaction({
-  title,
-  amount,
-  type,
-  category,
-  day,
-  monthOffset,
-  recurring = false
-}) {
-  const id = uid();
-  return {
-    id,
+  return entries.map(([title, amount, type, category, date]) => ({
+    id: uid(),
     title,
     amount,
     type,
     category,
-    date: isoDateForMonth(day, monthOffset),
-    recurring,
-    recurringGroup: recurring ? id : null
-  };
+    date
+  }));
 }
 
-function getSampleTransactions() {
-  return [
-    createDemoTransaction({
-      title: "Monthly salary",
-      amount: 2850,
-      type: "income",
-      category: "salary",
-      day: 2,
-      monthOffset: 0,
-      recurring: true
-    }),
-    createDemoTransaction({
-      title: "Apartment rent",
-      amount: 900,
-      type: "expense",
-      category: "rent",
-      day: 3,
-      monthOffset: 0,
-      recurring: true
-    }),
-    createDemoTransaction({
-      title: "Electricity bill",
-      amount: 92,
-      type: "expense",
-      category: "utilities",
-      day: 7,
-      monthOffset: 0,
-      recurring: true
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 168.5,
-      type: "expense",
-      category: "food",
-      day: 5,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 142.3,
-      type: "expense",
-      category: "food",
-      day: 19,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Metro and taxis",
-      amount: 74,
-      type: "expense",
-      category: "transport",
-      day: 6,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Freelance dashboard project",
-      amount: 640,
-      type: "income",
-      category: "freelance",
-      day: 8,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "New headphones",
-      amount: 129,
-      type: "expense",
-      category: "shopping",
-      day: 11,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Gym membership",
-      amount: 39,
-      type: "expense",
-      category: "health",
-      day: 13,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Cinema and dinner",
-      amount: 58,
-      type: "expense",
-      category: "entertainment",
-      day: 9,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Course subscription",
-      amount: 45,
-      type: "expense",
-      category: "education",
-      day: 12,
-      monthOffset: 0
-    }),
-    createDemoTransaction({
-      title: "Monthly salary",
-      amount: 2850,
-      type: "income",
-      category: "salary",
-      day: 2,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Apartment rent",
-      amount: 900,
-      type: "expense",
-      category: "rent",
-      day: 3,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 151.25,
-      type: "expense",
-      category: "food",
-      day: 8,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Train tickets",
-      amount: 88,
-      type: "expense",
-      category: "transport",
-      day: 10,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Weekend trip",
-      amount: 210,
-      type: "expense",
-      category: "travel",
-      day: 18,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Freelance landing page",
-      amount: 420,
-      type: "income",
-      category: "freelance",
-      day: 21,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Pharmacy",
-      amount: 33,
-      type: "expense",
-      category: "health",
-      day: 16,
-      monthOffset: -1
-    }),
-    createDemoTransaction({
-      title: "Monthly salary",
-      amount: 2800,
-      type: "income",
-      category: "salary",
-      day: 2,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Apartment rent",
-      amount: 900,
-      type: "expense",
-      category: "rent",
-      day: 3,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 159.9,
-      type: "expense",
-      category: "food",
-      day: 6,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 137.45,
-      type: "expense",
-      category: "food",
-      day: 22,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Streaming subscriptions",
-      amount: 24,
-      type: "expense",
-      category: "entertainment",
-      day: 9,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Electricity bill",
-      amount: 86,
-      type: "expense",
-      category: "utilities",
-      day: 12,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Books and materials",
-      amount: 67,
-      type: "expense",
-      category: "education",
-      day: 15,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Mobile plan",
-      amount: 29,
-      type: "expense",
-      category: "utilities",
-      day: 17,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Client workshop",
-      amount: 510,
-      type: "income",
-      category: "freelance",
-      day: 20,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Winter jacket",
-      amount: 146,
-      type: "expense",
-      category: "shopping",
-      day: 24,
-      monthOffset: -2
-    }),
-    createDemoTransaction({
-      title: "Monthly salary",
-      amount: 2800,
-      type: "income",
-      category: "salary",
-      day: 2,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Apartment rent",
-      amount: 900,
-      type: "expense",
-      category: "rent",
-      day: 3,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Groceries",
-      amount: 144,
-      type: "expense",
-      category: "food",
-      day: 5,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Bus card recharge",
-      amount: 41,
-      type: "expense",
-      category: "transport",
-      day: 7,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Medical checkup",
-      amount: 78,
-      type: "expense",
-      category: "health",
-      day: 13,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Short getaway",
-      amount: 185,
-      type: "expense",
-      category: "travel",
-      day: 19,
-      monthOffset: -3
-    }),
-    createDemoTransaction({
-      title: "Interface audit",
-      amount: 380,
-      type: "income",
-      category: "freelance",
-      day: 23,
-      monthOffset: -3
-    })
-  ];
-}
+function validateTransaction(formData) {
+  const title = formData.get("title")?.trim() || "";
+  const amountValue = formData.get("amount");
+  const amount = normalizeAmount(amountValue);
+  const type = formData.get("type");
+  const category = formData.get("category");
+  const date = formData.get("date");
 
-function getCurrentMonthExpenses(transactions) {
-  const currentMonthKey = getMonthKey(new Date());
-  return transactions
-    .filter((transaction) => transaction.type === "expense")
-    .filter((transaction) => getMonthKey(transaction.date) === currentMonthKey)
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-}
-
-function ensureRecurringTransactions() {
-  // Generate missing monthly copies for recurring transactions so they remain
-  // visible after refresh without requiring a backend scheduler.
-  const existingKeys = new Set(
-    state.transactions.map((transaction) => `${transaction.recurringGroup || transaction.id}-${getMonthKey(transaction.date)}`)
-  );
-  const today = new Date();
-  const generated = [];
-
-  state.transactions
-    .filter((transaction) => transaction.recurring)
-    .forEach((transaction) => {
-      const startDate = new Date(transaction.date);
-      let cursor = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-
-      while (cursor <= today) {
-        const monthKey = getMonthKey(cursor);
-        const recurringGroup = transaction.recurringGroup || transaction.id;
-        const compositeKey = `${recurringGroup}-${monthKey}`;
-
-        if (!existingKeys.has(compositeKey)) {
-          generated.push({
-            ...transaction,
-            id: uid(),
-            date: cursor.toISOString().slice(0, 10),
-            recurringGroup,
-            generatedFromRecurring: true
-          });
-          existingKeys.add(compositeKey);
-        }
-
-        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, startDate.getDate());
-      }
-    });
-
-  if (generated.length) {
-    state.transactions = [...state.transactions, ...generated];
-    store.saveTransactions(state.transactions);
+  if (!title || !amountValue || !type || !category || !date) {
+    return { error: "Please complete all fields before saving." };
   }
-}
 
-function exportToCsv() {
-  const headers = ["id", "title", "amount", "type", "category", "date", "recurring"];
-  const rows = state.transactions.map((transaction) =>
-    [
-      transaction.id,
-      `"${transaction.title.replace(/"/g, '""')}"`,
-      transaction.amount,
-      transaction.type,
-      transaction.category,
-      transaction.date,
-      transaction.recurring ? "yes" : "no"
-    ].join(",")
-  );
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { error: "Enter a valid amount greater than zero." };
+  }
 
-  const csv = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "finance-transactions.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function computeBudgetModel() {
-  const spent = getCurrentMonthExpenses(state.transactions);
-  const percentage = state.budget ? (spent / state.budget) * 100 : 0;
+  if (amount > 999999999.99) {
+    return { error: "Amount is too large. Please enter a smaller value." };
+  }
 
   return {
-    budget: state.budget,
-    spent,
-    remaining: Math.max(state.budget - spent, 0),
-    percentage
+    value: {
+      id: uid(),
+      title,
+      amount,
+      type,
+      category,
+      date
+    }
   };
+}
+
+function saveTransactions(nextTransactions) {
+  // Persist first, then update in-memory state so the UI never implies a save
+  // worked when the browser storage layer actually rejected it.
+  const didSave = store.saveTransactions(nextTransactions);
+
+  if (!didSave) {
+    showFormMessage(
+      elements.formMessage,
+      "Could not save your data in this browser. Please check local storage settings.",
+      "error"
+    );
+    return false;
+  }
+
+  state.transactions = nextTransactions;
+  return true;
 }
 
 function render() {
-  // The dashboard always renders from derived data so filters, insights,
-  // charts, and totals stay in sync after every change.
   const filteredTransactions = applyFilters(state.transactions, state.filters);
   const summary = calculateSummary(filteredTransactions);
   const categorySpending = getCategorySpending(filteredTransactions, categoriesMap);
-  const topCategory = getTopSpendingCategory(filteredTransactions, categoriesMap);
-  const comparison = getMonthlyExpenseComparison(state.transactions);
-  const monthlySeries = getMonthlyExpenseSeries(filteredTransactions);
+  const topCategory = getTopSpendingCategory(state.transactions, categoriesMap);
+  const spentThisMonth = getSpentThisMonth(state.transactions);
+  const monthOptions = getMonthOptions(state.transactions);
 
-  updateSummary(summary, filteredTransactions.length, {
+  populateMonthFilter(elements.filterMonth, monthOptions);
+  elements.filterMonth.value = state.filters.month;
+
+  updateSummary(summary, filteredTransactions.length, { topCategory, spentThisMonth }, {
     balance: elements.balance,
     income: elements.income,
     expense: elements.expense,
-    count: elements.count
+    count: elements.count,
+    topCategory: elements.topCategory,
+    topCategoryValue: elements.topCategoryValue,
+    spentThisMonth: elements.spentThisMonth
   });
-
-  updateBudget(computeBudgetModel(), {
-    input: elements.budgetInput,
-    spent: elements.budgetSpent,
-    remaining: elements.budgetRemaining,
-    percent: elements.budgetPercent,
-    progress: elements.budgetProgress,
-    alert: elements.budgetAlert,
-    pill: elements.budgetPill
-  });
-
-  updateInsights(
-    { topCategory, comparison, categorySpending },
-    {
-      topCategory: elements.topCategory,
-      topCategoryValue: elements.topCategoryValue,
-      monthComparison: elements.monthComparison,
-      monthComparisonDetail: elements.monthComparisonDetail,
-      categoryInsights: elements.categoryInsights
-    }
-  );
 
   renderTransactions(
     filteredTransactions,
@@ -519,51 +165,57 @@ function render() {
     elements.transactionTemplate
   );
 
-  charts.renderCategoryChart(categorySpending, state.theme);
-  charts.renderTrendChart(monthlySeries, state.theme);
+  chart.render(categorySpending);
 }
 
-function handleTransactionSubmit(event) {
-  event.preventDefault();
-  const formData = new FormData(elements.transactionForm);
-  const transaction = {
-    id: uid(),
-    title: formData.get("title").trim(),
-    amount: normalizeAmount(formData.get("amount")),
-    type: formData.get("type"),
-    category: formData.get("category"),
-    date: formData.get("date"),
-    recurring: formData.get("recurring") === "on",
-    recurringGroup: null
-  };
+function resetForm() {
+  elements.transactionForm.reset();
+  elements.transactionForm.elements.date.value = todayIso();
+  showFormMessage(elements.formMessage, "");
+}
 
-  if (!transaction.title || !transaction.amount || !transaction.date) {
+function handleSubmit(event) {
+  event.preventDefault();
+
+  const result = validateTransaction(new FormData(elements.transactionForm));
+  if (result.error) {
+    showFormMessage(elements.formMessage, result.error, "error");
     return;
   }
 
-  if (transaction.recurring) {
-    transaction.recurringGroup = transaction.id;
+  const nextTransactions = [...state.transactions, result.value];
+  if (!saveTransactions(nextTransactions)) {
+    return;
   }
 
-  state.transactions = [...state.transactions, transaction];
-  store.saveTransactions(state.transactions);
-  elements.transactionForm.reset();
-  elements.transactionForm.elements.date.value = new Date().toISOString().slice(0, 10);
+  resetForm();
+  showFormMessage(elements.formMessage, "Transaction saved.", "success");
   render();
 }
 
-function handleBudgetSubmit(event) {
-  event.preventDefault();
-  state.budget = normalizeAmount(elements.budgetInput.value || 0);
-  store.saveBudget(state.budget);
+function handleDelete(event) {
+  const button = event.target.closest(".delete-button");
+  if (!button?.dataset.id) {
+    return;
+  }
+
+  const nextTransactions = state.transactions.filter(
+    (transaction) => transaction.id !== button.dataset.id
+  );
+
+  if (!saveTransactions(nextTransactions)) {
+    return;
+  }
+
+  showFormMessage(elements.formMessage, "Transaction deleted.", "success");
   render();
 }
 
 function handleFilterChange() {
   state.filters = {
     category: elements.filterCategory.value,
-    type: elements.filterType.value,
-    date: elements.filterDate.value
+    month: elements.filterMonth.value,
+    type: elements.filterType.value
   };
   render();
 }
@@ -571,73 +223,37 @@ function handleFilterChange() {
 function resetFilters() {
   state.filters = {
     category: "all",
-    type: "all",
-    date: "all"
+    month: "all",
+    type: "all"
   };
 
   elements.filterCategory.value = "all";
+  elements.filterMonth.value = "all";
   elements.filterType.value = "all";
-  elements.filterDate.value = "all";
   render();
 }
 
-function deleteTransaction(transactionId) {
-  state.transactions = state.transactions.filter((transaction) => transaction.id !== transactionId);
-  store.saveTransactions(state.transactions);
+function loadDemoData() {
+  if (!saveTransactions(getDemoTransactions())) {
+    return;
+  }
+
+  showFormMessage(elements.formMessage, "Demo data loaded.", "success");
   render();
-}
-
-function toggleTheme() {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  store.saveTheme(state.theme);
-  applyTheme(state.theme, elements.themeToggle);
-  render();
-}
-
-function seedFormDefaults() {
-  elements.transactionForm.elements.date.value = new Date().toISOString().slice(0, 10);
-}
-
-function bindEvents() {
-  elements.transactionForm.addEventListener("submit", handleTransactionSubmit);
-  elements.budgetForm.addEventListener("submit", handleBudgetSubmit);
-  elements.filtersForm.addEventListener("change", handleFilterChange);
-  elements.resetFilters.addEventListener("click", resetFilters);
-  elements.themeToggle.addEventListener("click", toggleTheme);
-  elements.exportCsv.addEventListener("click", exportToCsv);
-
-  elements.transactionList.addEventListener("click", (event) => {
-    const button = event.target.closest(".delete-button");
-    if (button?.dataset.id) {
-      deleteTransaction(button.dataset.id);
-    }
-  });
 }
 
 function init() {
-  state.transactions = store.getTransactions();
-  state.budget = store.getBudget();
+  populateCategorySelect(elements.categorySelect, CATEGORIES);
+  populateCategorySelect(elements.filterCategory, CATEGORIES, true);
+  elements.transactionForm.elements.date.value = todayIso();
 
-  if (!state.transactions.length) {
-    state.transactions = getSampleTransactions();
-    store.saveTransactions(state.transactions);
-  }
+  elements.transactionForm.addEventListener("submit", handleSubmit);
+  elements.resetForm.addEventListener("click", resetForm);
+  elements.filtersForm.addEventListener("change", handleFilterChange);
+  elements.resetFilters.addEventListener("click", resetFilters);
+  elements.transactionList.addEventListener("click", handleDelete);
+  elements.loadDemo.addEventListener("click", loadDemoData);
 
-  if (!state.budget) {
-    state.budget = 3200;
-    store.saveBudget(state.budget);
-  }
-
-  populateCategorySelects({
-    categorySelect: elements.categorySelect,
-    filterCategory: elements.filterCategory,
-    categories: CATEGORIES
-  });
-
-  applyTheme(state.theme, elements.themeToggle);
-  seedFormDefaults();
-  ensureRecurringTransactions();
-  bindEvents();
   render();
 }
 

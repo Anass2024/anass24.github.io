@@ -1,35 +1,34 @@
 import { STORAGE_KEYS } from "./constants.js";
 
-function read(key, fallback) {
+function safeRead(key, fallback) {
   try {
-    const value = window.localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
+    const rawValue = window.localStorage.getItem(key);
+    return rawValue ? JSON.parse(rawValue) : fallback;
   } catch {
     return fallback;
   }
 }
 
-function write(key, value) {
-  window.localStorage.setItem(key, JSON.stringify(value));
+function safeWrite(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const store = {
   getTransactions() {
-    return read(STORAGE_KEYS.transactions, []);
+    const currentTransactions = safeRead(STORAGE_KEYS.transactions, null);
+    if (Array.isArray(currentTransactions)) {
+      return currentTransactions;
+    }
+
+    const legacyTransactions = safeRead(STORAGE_KEYS.legacyTransactions, []);
+    return Array.isArray(legacyTransactions) ? legacyTransactions : [];
   },
   saveTransactions(transactions) {
-    write(STORAGE_KEYS.transactions, transactions);
-  },
-  getBudget() {
-    return read(STORAGE_KEYS.budget, 0);
-  },
-  saveBudget(budget) {
-    write(STORAGE_KEYS.budget, budget);
-  },
-  getTheme() {
-    return read(STORAGE_KEYS.theme, "light");
-  },
-  saveTheme(theme) {
-    write(STORAGE_KEYS.theme, theme);
+    return safeWrite(STORAGE_KEYS.transactions, transactions);
   }
 };

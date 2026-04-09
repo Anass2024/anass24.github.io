@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Finance Tracker Dashboard</title>
+  <title>Finance Tracker</title>
   <meta
     name="description"
-    content="A modern personal finance dashboard with budgeting, insights, charts, recurring transactions, and CSV export."
+    content="A reliable personal finance tracker with local storage, filters, insights, and category charts."
   >
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,107 +20,83 @@
 <body>
   <div class="app-shell">
     <header class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Personal Finance Dashboard</p>
-        <h1>Make every Euro visible, planned, and easier to improve.</h1>
+      <div>
+        <p class="eyebrow">Reliable Finance Tracker</p>
+        <h1>Track spending clearly, keep your data safe, and understand your money faster.</h1>
         <p class="hero-text">
-          Track income and expenses, monitor your monthly budget, spot trends,
-          and understand where your money goes in one focused dashboard.
+          Save transactions locally, filter them by month and category, and review a clean summary
+          of your income, expenses, and biggest spending area.
         </p>
-      </div>
-
-      <div class="hero-actions">
-        <button id="theme-toggle" class="ghost-button" type="button" aria-pressed="false">
-          Toggle dark mode
-        </button>
-        <button id="export-csv" class="primary-button" type="button">
-          Export CSV
-        </button>
       </div>
     </header>
 
     <main class="dashboard">
-      <section class="panel panel-balance">
-        <div class="panel-heading">
+      <section class="panel panel-summary">
+        <div class="section-title">
           <div>
-          <p class="label">Current balance</p>
-            <h2 id="balance-value">EUR 0.00</h2>
+            <p class="label">Summary</p>
+            <h2>Balance and insights</h2>
           </div>
-          <span id="budget-status-pill" class="status-pill">Budget on track</span>
+          <button id="load-demo" class="ghost-button" type="button">Load demo data</button>
         </div>
 
-        <div class="stats-grid">
+        <div class="summary-grid">
+          <article class="stat-card balance-card">
+            <p class="label">Net balance</p>
+            <strong id="balance-value">EUR 0.00</strong>
+          </article>
           <article class="stat-card">
-            <p class="label">Income</p>
+            <p class="label">Total income</p>
             <strong id="income-value" class="positive">EUR 0.00</strong>
           </article>
           <article class="stat-card">
-            <p class="label">Expenses</p>
+            <p class="label">Total expenses</p>
             <strong id="expense-value" class="negative">EUR 0.00</strong>
+          </article>
+          <article class="stat-card">
+            <p class="label">Top spending category</p>
+            <strong id="top-category">No expenses yet</strong>
+            <span id="top-category-value" class="muted">EUR 0.00</span>
+          </article>
+          <article class="stat-card">
+            <p class="label">Spent this month</p>
+            <strong id="spent-this-month">EUR 0.00</strong>
+            <span id="spent-this-month-detail" class="muted">Based on expense transactions only.</span>
           </article>
           <article class="stat-card">
             <p class="label">Transactions</p>
             <strong id="transaction-count">0</strong>
+            <span class="muted">Saved automatically in your browser.</span>
           </article>
         </div>
-      </section>
 
-      <section class="panel panel-budget">
-        <div class="section-title">
-          <div>
-            <p class="label">Budget control</p>
-            <h3>Monthly budget</h3>
-          </div>
-        </div>
-
-        <form id="budget-form" class="budget-form">
-          <label>
-            Budget amount
-            <div class="inline-input">
-              <span>EUR</span>
-              <input id="budget-input" name="budget" type="number" min="0" step="0.01" placeholder="3000">
+        <div class="chart-panel">
+          <div class="section-title compact">
+            <div>
+              <p class="label">Chart</p>
+              <h3>Expenses by category</h3>
             </div>
-          </label>
-          <button class="primary-button" type="submit">Save budget</button>
-        </form>
-
-        <div class="budget-meta">
-          <div>
-            <p class="label">Spent this month</p>
-            <strong id="budget-spent">EUR 0.00</strong>
           </div>
-          <div>
-            <p class="label">Used</p>
-            <strong id="budget-percent">0%</strong>
-          </div>
-          <div>
-            <p class="label">Remaining</p>
-            <strong id="budget-remaining">EUR 0.00</strong>
-          </div>
+          <canvas id="category-chart" aria-label="Expenses by category pie chart"></canvas>
         </div>
-
-        <div class="progress-track" aria-hidden="true">
-          <div id="budget-progress" class="progress-bar"></div>
-        </div>
-        <p id="budget-alert" class="helper-text"></p>
       </section>
 
       <section class="panel panel-form">
         <div class="section-title">
           <div>
-            <p class="label">New activity</p>
-            <h3>Add transaction</h3>
+            <p class="label">Add Transaction</p>
+            <h2>Record income or expense</h2>
           </div>
         </div>
 
-        <form id="transaction-form" class="transaction-form">
+        <form id="transaction-form" class="transaction-form" novalidate>
           <label>
-            Title
-            <input name="title" type="text" maxlength="80" placeholder="Salary, Groceries, Rent" required>
+            Description
+            <input name="title" type="text" maxlength="80" placeholder="Groceries, Rent, Salary" required>
           </label>
           <label>
             Amount
-            <input name="amount" type="number" min="0.01" step="0.01" placeholder="120.00" required>
+            <input name="amount" type="number" min="0.01" max="999999999.99" step="0.01" placeholder="120.00" required>
           </label>
           <label>
             Type
@@ -137,45 +113,19 @@
             Date
             <input name="date" type="date" required>
           </label>
-          <label class="checkbox-field">
-            <input name="recurring" type="checkbox">
-            <span>Repeat monthly</span>
-          </label>
-          <button class="primary-button" type="submit">Add transaction</button>
+          <div class="form-actions">
+            <button class="primary-button" type="submit">Save transaction</button>
+            <button id="reset-form" class="ghost-button" type="button">Reset</button>
+          </div>
+          <p id="form-message" class="helper-text" aria-live="polite"></p>
         </form>
       </section>
 
-      <section class="panel panel-insights">
+      <section class="panel panel-transactions">
         <div class="section-title">
           <div>
-            <p class="label">Insights</p>
-            <h3>Financial overview</h3>
-          </div>
-        </div>
-
-        <div class="insights-grid">
-          <article class="insight-card">
-            <p class="label">Top spending category</p>
-            <strong id="top-category">No expenses yet</strong>
-            <span id="top-category-value" class="muted">EUR 0.00</span>
-          </article>
-          <article class="insight-card">
-            <p class="label">This month vs last month</p>
-            <strong id="month-comparison">0%</strong>
-            <span id="month-comparison-detail" class="muted">No monthly expense data yet.</span>
-          </article>
-          <article class="insight-card insight-list-card">
-            <p class="label">Spend by category</p>
-            <ul id="category-insights" class="insight-list"></ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="panel panel-filters">
-        <div class="section-title">
-          <div>
-            <p class="label">Explore data</p>
-            <h3>Filters</h3>
+            <p class="label">Transactions</p>
+            <h2>History and filters</h2>
           </div>
         </div>
 
@@ -185,54 +135,19 @@
             <select id="filter-category" name="category"></select>
           </label>
           <label>
+            Month
+            <select id="filter-month" name="month"></select>
+          </label>
+          <label>
             Type
             <select id="filter-type" name="type">
-              <option value="all">All</option>
+              <option value="all">All types</option>
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
           </label>
-          <label>
-            Period
-            <select id="filter-date" name="date">
-              <option value="all">All time</option>
-              <option value="thisMonth">This month</option>
-              <option value="lastMonth">Last month</option>
-            </select>
-          </label>
           <button id="reset-filters" class="ghost-button" type="button">Reset filters</button>
         </form>
-      </section>
-
-      <section class="panel panel-charts">
-        <div class="chart-card">
-          <div class="section-title compact">
-            <div>
-              <p class="label">Chart</p>
-              <h3>Expenses by category</h3>
-            </div>
-          </div>
-          <canvas id="category-chart" aria-label="Expense breakdown by category"></canvas>
-        </div>
-
-        <div class="chart-card">
-          <div class="section-title compact">
-            <div>
-              <p class="label">Chart</p>
-              <h3>Spending over time</h3>
-            </div>
-          </div>
-          <canvas id="trend-chart" aria-label="Expense trend over time"></canvas>
-        </div>
-      </section>
-
-      <section class="panel panel-transactions">
-        <div class="section-title">
-          <div>
-            <p class="label">History</p>
-            <h3>Transactions</h3>
-          </div>
-        </div>
 
         <div id="transaction-list" class="transaction-list"></div>
       </section>
@@ -241,14 +156,14 @@
 
   <template id="transaction-item-template">
     <article class="transaction-item">
-      <div class="transaction-meta">
+      <div class="transaction-main">
         <div class="transaction-icon"></div>
         <div>
-          <h4 class="transaction-title"></h4>
-          <p class="transaction-subtitle"></p>
+          <h3 class="transaction-title"></h3>
+          <p class="transaction-meta"></p>
         </div>
       </div>
-      <div class="transaction-side">
+      <div class="transaction-actions">
         <strong class="transaction-amount"></strong>
         <button class="delete-button" type="button">Delete</button>
       </div>

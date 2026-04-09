@@ -1,21 +1,15 @@
-import { getLastMonth, isSameMonth } from "./utils.js";
+import { getMonthKey } from "./utils.js";
 
-export function applyFilters(transactions, filters, referenceDate = new Date()) {
+export function applyFilters(transactions, filters) {
   return transactions.filter((transaction) => {
-    const matchesCategory =
+    const categoryMatch =
       filters.category === "all" || transaction.category === filters.category;
 
-    const matchesType = filters.type === "all" || transaction.type === filters.type;
+    const typeMatch = filters.type === "all" || transaction.type === filters.type;
 
-    let matchesDate = true;
-    if (filters.date === "thisMonth") {
-      matchesDate = isSameMonth(transaction.date, referenceDate);
-    }
+    const monthMatch =
+      filters.month === "all" || getMonthKey(transaction.date) === filters.month;
 
-    if (filters.date === "lastMonth") {
-      matchesDate = isSameMonth(transaction.date, getLastMonth(referenceDate));
-    }
-
-    return matchesCategory && matchesType && matchesDate;
+    return categoryMatch && typeMatch && monthMatch;
   });
 }
