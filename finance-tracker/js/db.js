@@ -53,6 +53,18 @@ export async function addTransaction(userId, transaction) {
   });
 }
 
+export async function upsertTransaction(userId, transaction) {
+  return setDoc(
+    doc(db, "users", userId, "transactions", transaction.id),
+    {
+      ...transaction,
+      userId,
+      createdAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
 export async function deleteTransaction(userId, transactionId) {
   return deleteDoc(doc(db, "users", userId, "transactions", transactionId));
 }

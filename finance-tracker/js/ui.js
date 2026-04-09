@@ -125,8 +125,8 @@ export function setAuthMode({
   userChip,
   userEmail
 }, isAuthenticated) {
-  authPanel.classList.toggle("hidden", isAuthenticated);
-  appPanel.classList.toggle("hidden", !isAuthenticated);
-  userChip.classList.toggle("hidden", !isAuthenticated);
-  userChip.textContent = isAuthenticated ? userEmail : "";
+  authPanel.classList.toggle("hidden", true);
+  appPanel.classList.remove("hidden");
+  userChip.classList.remove("hidden");
+  userChip.textContent = userEmail || "";
 }

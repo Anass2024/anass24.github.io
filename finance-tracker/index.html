@@ -24,21 +24,21 @@
         <p class="eyebrow">PulseBudget</p>
         <h1>Your finances, synced across devices and organized like a real product.</h1>
         <p class="hero-text">
-          Create an account, store transactions in the cloud, follow your monthly budget,
-          and keep every device in sync in real time.
+          Start instantly in guest mode, then create an account later if you want cloud sync
+          across devices.
         </p>
       </div>
       <div id="user-chip" class="user-chip hidden"></div>
     </header>
 
     <main>
-      <section id="auth-panel" class="auth-panel panel">
+      <section id="auth-panel" class="auth-panel panel hidden">
         <div class="auth-card">
           <div>
-            <p class="label">Account Access</p>
-            <h2>Sign up or log in</h2>
+            <p class="label">Optional Account</p>
+            <h2>Create an account or log in</h2>
             <p class="muted">
-              Your transactions are tied to your account and synced from Firestore in real time.
+              Guest mode already works without login. Create an account only if you want cloud sync.
             </p>
           </div>
 
@@ -54,13 +54,14 @@
             <div class="auth-actions">
               <button id="signup-button" class="primary-button" type="submit">Create account</button>
               <button id="login-button" class="ghost-button" type="button">Log in</button>
+              <button id="close-auth-button" class="ghost-button" type="button">Close</button>
             </div>
             <p id="auth-message" class="helper-text" aria-live="polite"></p>
           </form>
         </div>
       </section>
 
-      <section id="app-panel" class="hidden">
+      <section id="app-panel">
         <div class="toolbar">
           <div class="toolbar-copy">
             <p class="label">Dashboard</p>
@@ -68,9 +69,14 @@
           </div>
           <div class="toolbar-actions">
             <button id="sync-status" class="status-pill" type="button" disabled>Waiting for data</button>
+            <button id="open-auth-button" class="ghost-button" type="button">Login / Sign up</button>
             <button id="export-csv" class="ghost-button" type="button">Export CSV</button>
-            <button id="logout-button" class="ghost-button" type="button">Log out</button>
+            <button id="logout-button" class="ghost-button hidden" type="button">Log out</button>
           </div>
+        </div>
+
+        <div id="guest-banner" class="notice-card hidden">
+          Save your data by creating an account. Your guest data can be uploaded when you log in.
         </div>
 
         <div id="loading-state" class="notice-card">Loading your data...</div>

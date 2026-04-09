@@ -1,6 +1,9 @@
 # Firebase Setup
 
-This app is now structured as a static SaaS-style frontend for Firebase Authentication + Cloud Firestore.
+This app now supports a hybrid model:
+- guest mode with localStorage
+- optional Firebase Authentication
+- optional Firestore cloud sync
 
 ## 1. Create Firebase project
 
@@ -62,6 +65,8 @@ If you want the easiest production path with Firebase, the official hosting docs
 - https://firebase.google.com/docs/hosting
 
 ## 7. Real-time sync
+
+When users log in, the app can upload their existing guest-mode local data to Firestore.
 
 The app uses Firestore `onSnapshot()` listeners so:
 - transactions update instantly

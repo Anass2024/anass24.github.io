@@ -6,7 +6,8 @@ import {
   deleteTransaction as deleteTransactionDoc,
   saveBudget as saveBudgetDoc,
   subscribeToSettings,
-  subscribeToTransactions
+  subscribeToTransactions,
+  upsertTransaction
 } from "./db.js";
 import { applyFilters } from "./filters.js";
 import { firebaseReady } from "./firebase.js";
@@ -19,6 +20,7 @@ import {
   getSpentThisMonth,
   getTopSpendingCategory
 } from "./insights.js";
+import { localStore } from "./local-store.js";
 import {
   populateCategorySelect,
   populateMonthFilter,
@@ -30,7 +32,7 @@ import {
   updateBudget,
   updateSummary
 } from "./ui.js";
-import { escapeCsvValue, normalizeAmount, todayIso } from "./utils.js";
+import { escapeCsvValue, normalizeAmount, todayIso, uid } from "./utils.js";
 
 const categoriesMap = new Map(CATEGORIES.map((category) => [category.value, category]));
 
@@ -43,7 +45,10 @@ const elements = {
   authMessage: document.querySelector("#auth-message"),
   loginButton: document.querySelector("#login-button"),
   logoutButton: document.querySelector("#logout-button"),
+  openAuthButton: document.querySelector("#open-auth-button"),
+  closeAuthButton: document.querySelector("#close-auth-button"),
   userChip: document.querySelector("#user-chip"),
+  guestBanner: document.querySelector("#guest-banner"),
   transactionForm: document.querySelector("#transaction-form"),
   resetForm: document.querySelector("#reset-form"),
   recurringInput: document.querySelector("#recurring-input"),
@@ -85,6 +90,7 @@ const charts = new DashboardCharts({
 });
 
 const state = {
+  mode: "guest",
   user: null,
   transactions: [],
   budget: 0,
@@ -139,6 +145,7 @@ function validateTransaction(formData) {
 
   return {
     value: {
+      id: uid(),
       title,
       amount,
       type,
@@ -191,13 +198,9 @@ function render() {
 
   charts.renderCategoryChart(categorySpending);
   charts.renderTrendChart(monthlySeries);
-}
 
-function resetForm() {
-  elements.transactionForm.reset();
-  elements.transactionForm.elements.date.value = todayIso();
-  elements.recurringInput.checked = false;
-  showMessage(elements.formMessage, "");
+  const shouldPromptUpgrade = state.mode === "guest" && state.transactions.length >= 3;
+  elements.guestBanner.classList.toggle("hidden", !shouldPromptUpgrade);
 }
 
 function clearSubscriptions() {
@@ -205,6 +208,27 @@ function clearSubscriptions() {
   state.unsubSettings?.();
   state.unsubTransactions = null;
   state.unsubSettings = null;
+}
+
+function loadGuestMode() {
+  clearSubscriptions();
+  state.mode = "guest";
+  state.user = null;
+  state.transactions = localStore.getTransactions();
+  state.budget = localStore.getBudget();
+  setLoadingState(elements.loadingState, false);
+  setErrorState(elements.errorState, firebaseReady ? "" : APP_COPY.configMissing);
+  setSyncStatus(APP_COPY.guestMode);
+  elements.logoutButton.classList.add("hidden");
+  elements.openAuthButton.classList.remove("hidden");
+  render();
+}
+
+function resetForm() {
+  elements.transactionForm.reset();
+  elements.transactionForm.elements.date.value = todayIso();
+  elements.recurringInput.checked = false;
+  showMessage(elements.formMessage, "");
 }
 
 function exportTransactionsCsv() {
@@ -229,6 +253,27 @@ function exportTransactionsCsv() {
   link.download = "pulsebudget-transactions.csv";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+async function syncGuestDataToCloud(user) {
+  const guestTransactions = localStore.getTransactions();
+  const guestBudget = localStore.getBudget();
+
+  if (!guestTransactions.length && !guestBudget) {
+    return;
+  }
+
+  setSyncStatus(APP_COPY.syncMigrating);
+
+  await Promise.all(
+    guestTransactions.map((transaction) => upsertTransaction(user.uid, transaction))
+  );
+
+  if (guestBudget) {
+    await saveBudgetDoc(user.uid, guestBudget);
+  }
+
+  localStore.clearGuestData();
 }
 
 async function handleSignUp(event) {
@@ -272,14 +317,23 @@ async function handleLogout() {
   }
 }
 
-function bindUserData(user) {
+async function bindUserData(user) {
   clearSubscriptions();
   state.user = user;
+  state.mode = "cloud";
   state.transactions = [];
   state.budget = 0;
   setLoadingState(elements.loadingState, true);
   setErrorState(elements.errorState, "");
   setSyncStatus(APP_COPY.syncLoading);
+  elements.logoutButton.classList.remove("hidden");
+  elements.openAuthButton.classList.add("hidden");
+
+  try {
+    await syncGuestDataToCloud(user);
+  } catch (error) {
+    setErrorState(elements.errorState, error.message || "Could not sync guest data.");
+  }
 
   state.unsubTransactions = subscribeToTransactions(
     user.uid,
@@ -307,6 +361,44 @@ function bindUserData(user) {
   );
 }
 
+async function addTransaction(transaction) {
+  if (state.mode === "cloud" && state.user) {
+    return addTransactionDoc(state.user.uid, transaction);
+  }
+
+  return localStore.saveTransactions([...state.transactions, transaction]);
+}
+
+async function deleteTransaction(transactionId) {
+  if (state.mode === "cloud" && state.user) {
+    return deleteTransactionDoc(state.user.uid, transactionId);
+  }
+
+  const nextTransactions = state.transactions.filter((transaction) => transaction.id !== transactionId);
+  return localStore.saveTransactions(nextTransactions);
+}
+
+async function saveBudget(value) {
+  const budget = normalizeAmount(value);
+
+  if (!Number.isFinite(budget) || budget < 0) {
+    showMessage(elements.budgetMessage, "Enter a valid budget amount.", "error");
+    return false;
+  }
+
+  if (budget > 999999999.99) {
+    showMessage(elements.budgetMessage, "Budget is too large. Please enter a smaller value.", "error");
+    return false;
+  }
+
+  if (state.mode === "cloud" && state.user) {
+    await saveBudgetDoc(state.user.uid, budget);
+    return true;
+  }
+
+  return localStore.saveBudget(budget);
+}
+
 async function handleTransactionSubmit(event) {
   event.preventDefault();
   const result = validateTransaction(new FormData(elements.transactionForm));
@@ -318,7 +410,18 @@ async function handleTransactionSubmit(event) {
 
   try {
     showMessage(elements.formMessage, "Saving transaction...");
-    await addTransactionDoc(state.user.uid, result.value);
+    const didSave = await addTransaction(result.value);
+
+    if (state.mode === "guest" && !didSave) {
+      showMessage(elements.formMessage, "Could not save transaction in local storage.", "error");
+      return;
+    }
+
+    if (state.mode === "guest") {
+      state.transactions = localStore.getTransactions();
+      render();
+    }
+
     resetForm();
     showMessage(elements.formMessage, "Transaction saved.", "success");
   } catch (error) {
@@ -328,12 +431,23 @@ async function handleTransactionSubmit(event) {
 
 async function handleDelete(event) {
   const button = event.target.closest(".delete-button");
-  if (!button?.dataset.id || !state.user) {
+  if (!button?.dataset.id) {
     return;
   }
 
   try {
-    await deleteTransactionDoc(state.user.uid, button.dataset.id);
+    const didDelete = await deleteTransaction(button.dataset.id);
+
+    if (state.mode === "guest" && !didDelete) {
+      showMessage(elements.formMessage, "Could not delete transaction from local storage.", "error");
+      return;
+    }
+
+    if (state.mode === "guest") {
+      state.transactions = localStore.getTransactions();
+      render();
+    }
+
     showMessage(elements.formMessage, "Transaction deleted.", "success");
   } catch (error) {
     showMessage(elements.formMessage, error.message || "Could not delete transaction.", "error");
@@ -342,20 +456,21 @@ async function handleDelete(event) {
 
 async function handleBudgetSubmit(event) {
   event.preventDefault();
-  const budget = normalizeAmount(elements.budgetInput.value || 0);
-
-  if (!Number.isFinite(budget) || budget < 0) {
-    showMessage(elements.budgetMessage, "Enter a valid budget amount.", "error");
-    return;
-  }
-
-  if (budget > 999999999.99) {
-    showMessage(elements.budgetMessage, "Budget is too large. Please enter a smaller value.", "error");
-    return;
-  }
 
   try {
-    await saveBudgetDoc(state.user.uid, budget);
+    const didSave = await saveBudget(elements.budgetInput.value || 0);
+    if (!didSave) {
+      if (state.mode === "guest") {
+        showMessage(elements.budgetMessage, "Could not save budget in local storage.", "error");
+      }
+      return;
+    }
+
+    if (state.mode === "guest") {
+      state.budget = localStore.getBudget();
+      render();
+    }
+
     showMessage(elements.budgetMessage, "Budget saved.", "success");
   } catch (error) {
     showMessage(elements.budgetMessage, error.message || "Could not save budget.", "error");
@@ -379,19 +494,20 @@ function resetFilters() {
   render();
 }
 
+function toggleAuthPanel(forceOpen) {
+  const shouldOpen = typeof forceOpen === "boolean"
+    ? forceOpen
+    : elements.authPanel.classList.contains("hidden");
+
+  elements.authPanel.classList.toggle("hidden", !shouldOpen);
+}
+
 function initAuth() {
   if (!firebaseReady) {
+    elements.openAuthButton.disabled = true;
+    elements.openAuthButton.textContent = "Login unavailable";
     setErrorState(elements.errorState, APP_COPY.configMissing);
-    setAuthMode(
-      {
-        authPanel: elements.authPanel,
-        appPanel: elements.appPanel,
-        userChip: elements.userChip,
-        userEmail: ""
-      },
-      false
-    );
-    showMessage(elements.authMessage, APP_COPY.configMissing, "error");
+    loadGuestMode();
     return;
   }
 
@@ -401,20 +517,19 @@ function initAuth() {
         authPanel: elements.authPanel,
         appPanel: elements.appPanel,
         userChip: elements.userChip,
-        userEmail: user?.email || ""
+        userEmail: user ? `Cloud account: ${user.email}` : "Guest mode"
       },
       Boolean(user)
     );
 
     if (!user) {
-      clearSubscriptions();
-      state.user = null;
-      state.transactions = [];
-      state.budget = 0;
-      render();
+      elements.userChip.classList.remove("hidden");
+      elements.userChip.textContent = "Guest mode";
+      loadGuestMode();
       return;
     }
 
+    toggleAuthPanel(false);
     bindUserData(user);
   });
 }
@@ -423,11 +538,15 @@ function init() {
   populateCategorySelect(elements.categorySelect, CATEGORIES);
   populateCategorySelect(elements.filterCategory, CATEGORIES, true);
   elements.transactionForm.elements.date.value = todayIso();
-  setSyncStatus(APP_COPY.syncLoading);
+  elements.userChip.classList.remove("hidden");
+  elements.userChip.textContent = "Guest mode";
+  loadGuestMode();
 
   elements.authForm.addEventListener("submit", handleSignUp);
   elements.loginButton.addEventListener("click", handleLogIn);
   elements.logoutButton.addEventListener("click", handleLogout);
+  elements.openAuthButton.addEventListener("click", () => toggleAuthPanel(true));
+  elements.closeAuthButton.addEventListener("click", () => toggleAuthPanel(false));
   elements.transactionForm.addEventListener("submit", handleTransactionSubmit);
   elements.resetForm.addEventListener("click", resetForm);
   elements.budgetForm.addEventListener("submit", handleBudgetSubmit);
