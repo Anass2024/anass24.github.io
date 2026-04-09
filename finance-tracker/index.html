@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker Dashboard</title>
+  <meta
+    name="description"
+    content="A modern personal finance dashboard with budgeting, insights, charts, recurring transactions, and CSV export."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Personal Finance Dashboard</p>
+        <h1>Make every dirham visible, planned, and easier to improve.</h1>
+        <p class="hero-text">
+          Track income and expenses, monitor your monthly budget, spot trends,
+          and understand where your money goes in one focused dashboard.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button id="theme-toggle" class="ghost-button" type="button" aria-pressed="false">
+          Toggle dark mode
+        </button>
+        <button id="export-csv" class="primary-button" type="button">
+          Export CSV
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="panel panel-balance">
+        <div class="panel-heading">
+          <div>
+            <p class="label">Current balance</p>
+            <h2 id="balance-value">$0.00</h2>
+          </div>
+          <span id="budget-status-pill" class="status-pill">Budget on track</span>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <p class="label">Income</p>
+            <strong id="income-value" class="positive">$0.00</strong>
+          </article>
+          <article class="stat-card">
+            <p class="label">Expenses</p>
+            <strong id="expense-value" class="negative">$0.00</strong>
+          </article>
+          <article class="stat-card">
+            <p class="label">Transactions</p>
+            <strong id="transaction-count">0</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel panel-budget">
+        <div class="section-title">
+          <div>
+            <p class="label">Budget control</p>
+            <h3>Monthly budget</h3>
+          </div>
+        </div>
+
+        <form id="budget-form" class="budget-form">
+          <label>
+            Budget amount
+            <div class="inline-input">
+              <span>$</span>
+              <input id="budget-input" name="budget" type="number" min="0" step="0.01" placeholder="3000">
+            </div>
+          </label>
+          <button class="primary-button" type="submit">Save budget</button>
+        </form>
+
+        <div class="budget-meta">
+          <div>
+            <p class="label">Spent this month</p>
+            <strong id="budget-spent">$0.00</strong>
+          </div>
+          <div>
+            <p class="label">Used</p>
+            <strong id="budget-percent">0%</strong>
+          </div>
+          <div>
+            <p class="label">Remaining</p>
+            <strong id="budget-remaining">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="progress-track" aria-hidden="true">
+          <div id="budget-progress" class="progress-bar"></div>
+        </div>
+        <p id="budget-alert" class="helper-text"></p>
+      </section>
+
+      <section class="panel panel-form">
+        <div class="section-title">
+          <div>
+            <p class="label">New activity</p>
+            <h3>Add transaction</h3>
+          </div>
+        </div>
+
+        <form id="transaction-form" class="transaction-form">
+          <label>
+            Title
+            <input name="title" type="text" maxlength="80" placeholder="Salary, Groceries, Rent" required>
+          </label>
+          <label>
+            Amount
+            <input name="amount" type="number" min="0.01" step="0.01" placeholder="120.00" required>
+          </label>
+          <label>
+            Type
+            <select name="type" required>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </label>
+          <label>
+            Category
+            <select id="category-select" name="category" required></select>
+          </label>
+          <label>
+            Date
+            <input name="date" type="date" required>
+          </label>
+          <label class="checkbox-field">
+            <input name="recurring" type="checkbox">
+            <span>Repeat monthly</span>
+          </label>
+          <button class="primary-button" type="submit">Add transaction</button>
+        </form>
+      </section>
+
+      <section class="panel panel-insights">
+        <div class="section-title">
+          <div>
+            <p class="label">Insights</p>
+            <h3>Financial overview</h3>
+          </div>
+        </div>
+
+        <div class="insights-grid">
+          <article class="insight-card">
+            <p class="label">Top spending category</p>
+            <strong id="top-category">No expenses yet</strong>
+            <span id="top-category-value" class="muted">$0.00</span>
+          </article>
+          <article class="insight-card">
+            <p class="label">This month vs last month</p>
+            <strong id="month-comparison">0%</strong>
+            <span id="month-comparison-detail" class="muted">No monthly expense data yet.</span>
+          </article>
+          <article class="insight-card insight-list-card">
+            <p class="label">Spend by category</p>
+            <ul id="category-insights" class="insight-list"></ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel panel-filters">
+        <div class="section-title">
+          <div>
+            <p class="label">Explore data</p>
+            <h3>Filters</h3>
+          </div>
+        </div>
+
+        <form id="filters-form" class="filters-form">
+          <label>
+            Category
+            <select id="filter-category" name="category"></select>
+          </label>
+          <label>
+            Type
+            <select id="filter-type" name="type">
+              <option value="all">All</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </label>
+          <label>
+            Period
+            <select id="filter-date" name="date">
+              <option value="all">All time</option>
+              <option value="thisMonth">This month</option>
+              <option value="lastMonth">Last month</option>
+            </select>
+          </label>
+          <button id="reset-filters" class="ghost-button" type="button">Reset filters</button>
+        </form>
+      </section>
+
+      <section class="panel panel-charts">
+        <div class="chart-card">
+          <div class="section-title compact">
+            <div>
+              <p class="label">Chart</p>
+              <h3>Expenses by category</h3>
+            </div>
+          </div>
+          <canvas id="category-chart" aria-label="Expense breakdown by category"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="section-title compact">
+            <div>
+              <p class="label">Chart</p>
+              <h3>Spending over time</h3>
+            </div>
+          </div>
+          <canvas id="trend-chart" aria-label="Expense trend over time"></canvas>
+        </div>
+      </section>
+
+      <section class="panel panel-transactions">
+        <div class="section-title">
+          <div>
+            <p class="label">History</p>
+            <h3>Transactions</h3>
+          </div>
+        </div>
+
+        <div id="transaction-list" class="transaction-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <template id="transaction-item-template">
+    <article class="transaction-item">
+      <div class="transaction-meta">
+        <div class="transaction-icon"></div>
+        <div>
+          <h4 class="transaction-title"></h4>
+          <p class="transaction-subtitle"></p>
+        </div>
+      </div>
+      <div class="transaction-side">
+        <strong class="transaction-amount"></strong>
+        <button class="delete-button" type="button">Delete</button>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
