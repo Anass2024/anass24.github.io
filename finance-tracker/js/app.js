@@ -108,30 +108,39 @@ function setSyncStatus(label) {
   elements.syncStatus.textContent = label;
 }
 
-function demoDate(daysAgo) {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return date.toISOString().slice(0, 10);
-}
-
 function getDemoTransactions() {
-  return [
-    { id: uid(), title: "Monthly salary", amount: 3200, type: "income", category: "other", date: demoDate(26), recurring: false },
-    { id: uid(), title: "Apartment rent", amount: 980, type: "expense", category: "rent", date: demoDate(25), recurring: true },
-    { id: uid(), title: "Supermarket groceries", amount: 148.4, type: "expense", category: "food", date: demoDate(23), recurring: false },
-    { id: uid(), title: "Bus and metro pass", amount: 54, type: "expense", category: "transport", date: demoDate(22), recurring: false },
-    { id: uid(), title: "Freelance design project", amount: 680, type: "income", category: "other", date: demoDate(19), recurring: false },
-    { id: uid(), title: "New office chair", amount: 215, type: "expense", category: "shopping", date: demoDate(17), recurring: false },
-    { id: uid(), title: "Weekly groceries", amount: 132.75, type: "expense", category: "food", date: demoDate(15), recurring: false },
-    { id: uid(), title: "Taxi ride", amount: 18.5, type: "expense", category: "transport", date: demoDate(13), recurring: false },
-    { id: uid(), title: "Streaming and apps", amount: 29.99, type: "expense", category: "other", date: demoDate(12), recurring: true },
-    { id: uid(), title: "Part-time consulting", amount: 420, type: "income", category: "other", date: demoDate(9), recurring: false },
-    { id: uid(), title: "Weekend groceries", amount: 96.2, type: "expense", category: "food", date: demoDate(7), recurring: false },
-    { id: uid(), title: "Train tickets", amount: 42, type: "expense", category: "transport", date: demoDate(6), recurring: false },
-    { id: uid(), title: "Kitchen supplies", amount: 74.6, type: "expense", category: "shopping", date: demoDate(4), recurring: false },
-    { id: uid(), title: "Coffee and lunch", amount: 24.8, type: "expense", category: "food", date: demoDate(2), recurring: false },
-    { id: uid(), title: "Groceries", amount: 118.9, type: "expense", category: "food", date: demoDate(1), recurring: false }
+  const demoTransactions = [
+    { id: 1, type: "income", category: "Salary", amount: 8000, date: "2026-04-01" },
+    { id: 2, type: "expense", category: "Food", amount: 120, date: "2026-04-02" },
+    { id: 3, type: "expense", category: "Transport", amount: 40, date: "2026-04-03" },
+    { id: 4, type: "expense", category: "Shopping", amount: 300, date: "2026-04-04" },
+    { id: 5, type: "expense", category: "Rent", amount: 2500, date: "2026-04-05" },
+    { id: 6, type: "expense", category: "Food", amount: 90, date: "2026-04-06" },
+    { id: 7, type: "income", category: "Freelance", amount: 1500, date: "2026-04-07" },
+    { id: 8, type: "expense", category: "Transport", amount: 60, date: "2026-04-08" },
+    { id: 9, type: "expense", category: "Food", amount: 110, date: "2026-04-09" },
+    { id: 10, type: "expense", category: "Entertainment", amount: 200, date: "2026-04-10" }
   ];
+
+  const categoryMap = {
+    food: "food",
+    transport: "transport",
+    shopping: "shopping",
+    rent: "rent",
+    salary: "other",
+    freelance: "other",
+    entertainment: "other"
+  };
+
+  return demoTransactions.map((transaction) => ({
+    id: String(transaction.id),
+    title: transaction.category,
+    type: transaction.type,
+    category: categoryMap[transaction.category.toLowerCase()] || "other",
+    amount: transaction.amount,
+    date: transaction.date,
+    recurring: false
+  }));
 }
 
 function getDemoBudget() {
