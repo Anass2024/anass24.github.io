@@ -210,7 +210,7 @@ function clearSubscriptions() {
   state.unsubSettings = null;
 }
 
-function loadLocalData() {
+function loadFromLocalStorage() {
   clearSubscriptions();
   state.mode = "guest";
   state.user = null;
@@ -276,7 +276,7 @@ async function syncGuestDataToCloud(user) {
   localStore.clearGuestData();
 }
 
-function saveToLocal({ transactions = state.transactions, budget = state.budget } = {}) {
+function saveToLocalStorage({ transactions = state.transactions, budget = state.budget } = {}) {
   const transactionsSaved = localStore.saveTransactions(transactions);
   const budgetSaved = localStore.saveBudget(budget);
 
@@ -346,7 +346,7 @@ async function handleLogout() {
   }
 }
 
-async function loadFirebaseData(user) {
+async function loadFromFirebase(userId, user = state.user) {
   clearSubscriptions();
   state.user = user;
   state.mode = "cloud";
@@ -365,7 +365,7 @@ async function loadFirebaseData(user) {
   }
 
   state.unsubTransactions = subscribeToTransactions(
-    user.uid,
+    userId,
     (transactions) => {
       state.transactions = transactions;
       setLoadingState(elements.loadingState, false);
@@ -379,7 +379,7 @@ async function loadFirebaseData(user) {
   );
 
   state.unsubSettings = subscribeToSettings(
-    user.uid,
+    userId,
     (settings) => {
       state.budget = Number(settings.budget) || 0;
       render();
@@ -396,10 +396,10 @@ async function addTransaction(transaction) {
     return true;
   }
 
-  return saveToLocal({
-    transactions: [...state.transactions, transaction],
-    budget: state.budget
-  });
+    return saveToLocalStorage({
+      transactions: [...state.transactions, transaction],
+      budget: state.budget
+    });
 }
 
 async function deleteTransaction(transactionId) {
@@ -409,7 +409,7 @@ async function deleteTransaction(transactionId) {
   }
 
   const nextTransactions = state.transactions.filter((transaction) => transaction.id !== transactionId);
-  return saveToLocal({
+  return saveToLocalStorage({
     transactions: nextTransactions,
     budget: state.budget
   });
@@ -433,7 +433,7 @@ async function saveBudget(value) {
     return true;
   }
 
-  return saveToLocal({
+  return saveToLocalStorage({
     transactions: state.transactions,
     budget
   });
@@ -547,7 +547,7 @@ function initAuth() {
     elements.openAuthButton.disabled = true;
     elements.openAuthButton.textContent = "Login unavailable";
     setErrorState(elements.errorState, APP_COPY.configMissing);
-    loadLocalData();
+    loadFromLocalStorage();
     return;
   }
 
@@ -565,12 +565,12 @@ function initAuth() {
     if (!user) {
       elements.userChip.classList.remove("hidden");
       elements.userChip.textContent = "Guest mode";
-      loadLocalData();
+      loadFromLocalStorage();
       return;
     }
 
     toggleAuthPanel(false);
-    loadFirebaseData(user);
+    loadFromFirebase(user.uid, user);
   });
 }
 
@@ -580,7 +580,7 @@ function init() {
   elements.transactionForm.elements.date.value = todayIso();
   elements.userChip.classList.remove("hidden");
   elements.userChip.textContent = "Guest mode";
-  loadLocalData();
+  loadFromLocalStorage();
 
   elements.authForm.addEventListener("submit", handleSignUp);
   elements.loginButton.addEventListener("click", handleLogIn);
