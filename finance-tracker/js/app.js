@@ -109,42 +109,56 @@ function setSyncStatus(label) {
 }
 
 function getDemoTransactions() {
-  const demoTransactions = [
-    { id: 1, type: "income", category: "Salary", amount: 8000, date: "2026-04-01" },
-    { id: 2, type: "expense", category: "Food", amount: 120, date: "2026-04-02" },
-    { id: 3, type: "expense", category: "Transport", amount: 40, date: "2026-04-03" },
-    { id: 4, type: "expense", category: "Shopping", amount: 300, date: "2026-04-04" },
-    { id: 5, type: "expense", category: "Rent", amount: 2500, date: "2026-04-05" },
-    { id: 6, type: "expense", category: "Food", amount: 90, date: "2026-04-06" },
-    { id: 7, type: "income", category: "Freelance", amount: 1500, date: "2026-04-07" },
-    { id: 8, type: "expense", category: "Transport", amount: 60, date: "2026-04-08" },
-    { id: 9, type: "expense", category: "Food", amount: 110, date: "2026-04-09" },
-    { id: 10, type: "expense", category: "Entertainment", amount: 200, date: "2026-04-10" }
+  const raw = [
+    // ── February 2026 ──────────────────────────────────────────
+    { id:  1, type: "income",  title: "Monthly Salary",       category: "other",     amount: 2400, date: "2026-02-01" },
+    { id:  2, type: "expense", title: "Rent February",        category: "rent",      amount:  750, date: "2026-02-03" },
+    { id:  3, type: "expense", title: "Monthly Transit Pass", category: "transport", amount:   48, date: "2026-02-05" },
+    { id:  4, type: "expense", title: "Supermarket",          category: "food",      amount:   68, date: "2026-02-07" },
+    { id:  5, type: "expense", title: "Restaurant Lunch",     category: "food",      amount:   32, date: "2026-02-11" },
+    { id:  6, type: "expense", title: "Netflix & Spotify",    category: "other",     amount:   22, date: "2026-02-14" },
+    { id:  7, type: "expense", title: "Valentine's Dinner",   category: "food",      amount:   45, date: "2026-02-14" },
+    { id:  8, type: "expense", title: "Weekly Groceries",     category: "food",      amount:   58, date: "2026-02-20" },
+    { id:  9, type: "expense", title: "Pharmacy",             category: "other",     amount:   35, date: "2026-02-25" },
+    // ── March 2026 ─────────────────────────────────────────────
+    { id: 10, type: "income",  title: "Monthly Salary",       category: "other",     amount: 2400, date: "2026-03-01" },
+    { id: 11, type: "expense", title: "Rent March",           category: "rent",      amount:  750, date: "2026-03-03" },
+    { id: 12, type: "expense", title: "Weekly Groceries",     category: "food",      amount:   72, date: "2026-03-06" },
+    { id: 13, type: "expense", title: "Fuel",                 category: "transport", amount:   40, date: "2026-03-09" },
+    { id: 14, type: "expense", title: "Restaurant Dinner",    category: "food",      amount:   38, date: "2026-03-12" },
+    { id: 15, type: "expense", title: "Clothing",             category: "shopping",  amount:   95, date: "2026-03-14" },
+    { id: 16, type: "income",  title: "Freelance Project",    category: "other",     amount:  350, date: "2026-03-15" },
+    { id: 17, type: "expense", title: "Streaming Services",   category: "other",     amount:   22, date: "2026-03-17" },
+    { id: 18, type: "expense", title: "Supermarket",          category: "food",      amount:   61, date: "2026-03-20" },
+    { id: 19, type: "expense", title: "Doctor Visit",         category: "other",     amount:   48, date: "2026-03-24" },
+    { id: 20, type: "expense", title: "Taxi",                 category: "transport", amount:   18, date: "2026-03-28" },
+    // ── April 2026 ─────────────────────────────────────────────
+    { id: 21, type: "income",  title: "Monthly Salary",       category: "other",     amount: 2400, date: "2026-04-01" },
+    { id: 22, type: "expense", title: "Rent April",           category: "rent",      amount:  750, date: "2026-04-02" },
+    { id: 23, type: "expense", title: "Weekly Groceries",     category: "food",      amount:   65, date: "2026-04-04" },
+    { id: 24, type: "expense", title: "Electronics Accessory",category: "shopping",  amount:  120, date: "2026-04-05" },
+    { id: 25, type: "expense", title: "Monthly Transit Pass", category: "transport", amount:   48, date: "2026-04-07" },
+    { id: 26, type: "expense", title: "Dinner Out",           category: "food",      amount:   42, date: "2026-04-08" },
+    { id: 27, type: "expense", title: "Health & Pharmacy",    category: "other",     amount:   65, date: "2026-04-09" },
+    { id: 28, type: "expense", title: "Streaming Services",   category: "other",     amount:   22, date: "2026-04-10" },
+    { id: 29, type: "expense", title: "Online Shopping",      category: "shopping",  amount:   78, date: "2026-04-11" },
+    { id: 30, type: "expense", title: "Supermarket",          category: "food",      amount:   58, date: "2026-04-12" },
+    { id: 31, type: "expense", title: "Gym Membership",       category: "other",     amount:   30, date: "2026-04-13" }
   ];
 
-  const categoryMap = {
-    food: "food",
-    transport: "transport",
-    shopping: "shopping",
-    rent: "rent",
-    salary: "other",
-    freelance: "other",
-    entertainment: "other"
-  };
-
-  return demoTransactions.map((transaction) => ({
-    id: String(transaction.id),
-    title: transaction.category,
-    type: transaction.type,
-    category: categoryMap[transaction.category.toLowerCase()] || "other",
-    amount: transaction.amount,
-    date: transaction.date,
+  return raw.map((t) => ({
+    id: String(t.id),
+    title: t.title,
+    type: t.type,
+    category: t.category,
+    amount: t.amount,
+    date: t.date,
     recurring: false
   }));
 }
 
 function getDemoBudget() {
-  return 2500;
+  return 1800;
 }
 
 function validateAuthInputs() {
